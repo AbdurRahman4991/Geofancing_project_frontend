@@ -2,20 +2,23 @@ import 'package:flutter/material.dart';
 import 'pages/register.dart';
 import 'pages/login.dart';
 import 'pages/attendance.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  
   const MyApp({super.key});
+  
   
   @override
   Widget build(BuildContext context) {
     WidgetsFlutterBinding.ensureInitialized();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Geofance',
 
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -42,6 +45,7 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+  
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -49,6 +53,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  int _selectedIndex =0;
 
   @override
   Widget build(BuildContext context) {
@@ -90,20 +95,61 @@ class _HomePageState extends State<HomePage> {
               }
               ),
             
+            // ListTile(
+            //   title: const Text("Logout"),
+            //   leading: const Icon(Icons.logout),
+            //   onTap: () {
+            //     Navigator.pushNamed(context, '/logout');
+            //   },
+            // ),
             ListTile(
               title: const Text("Logout"),
               leading: const Icon(Icons.logout),
-              onTap: () {
-                Navigator.pushNamed(context, '/logout');
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('access_token');
+                await prefs.remove('geofancing'); // optional: remove geofencing data
+
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false, // remove all previous routes
+                  );
+                }
               },
             ),
+
           ],
         ),
       ),
+     
       
       body: const Center(
         
         child: Text(""),
+      ),
+     bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex, // keeps track of the selected tab
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index; // change tab
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Back',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

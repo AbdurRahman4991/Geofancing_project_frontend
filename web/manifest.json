@@ -1,6 +1,6 @@
 {
-    "name": "geofancing_project",
-    "short_name": "geofancing_project",
+    "name": "Geofance",
+    "short_name": "GPS",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

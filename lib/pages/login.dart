@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:geolocator/geolocator.dart';
-import 'dart:io';
 import '/services/login_service_api.dart';
+import '/helpers/device_helper.dart';
+import '/helpers/location_helper.dart';
 
 class Login extends StatefulWidget {
   @override
   _LoginState createState() => _LoginState();
 }
-
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -27,56 +25,22 @@ class _LoginState extends State<Login> {
 
   // ✅ ডিভাইস আইডি আনো
   Future<void> _loadDeviceInfo() async {
-    final deviceInfo = DeviceInfoPlugin();
-    String deviceId = '';
-
-    if (Platform.isAndroid) {
-      var androidInfo = await deviceInfo.androidInfo;
-      deviceId = androidInfo.id; // Android ডিভাইস আইডি
-    } else if (Platform.isIOS) {
-      var iosInfo = await deviceInfo.iosInfo;
-      deviceId = iosInfo.identifierForVendor ?? 'Unknown';
-    }
-
+    String deviceId = await DeviceHelper.getDeviceId();
     setState(() {
       _deviceIdController.text = deviceId;
     });
   }
 
-  // ✅ বর্তমান লোকেশন আনো
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // লোকেশন সার্ভিস অন আছে কিনা
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-      return;
-    }
-
-    // পারমিশন চেক করো
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    }
-
-    // লোকেশন নাও
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-
+  var position = await LocationHelper.getCurrentLocation();
+  if (position != null) {
     setState(() {
       _latitudeController.text = position.latitude.toString();
       _longitudeController.text = position.longitude.toString();
     });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +124,7 @@ class _LoginState extends State<Login> {
                         const SizedBox(height: 20),
                         TextFormField(
                           controller: _deviceIdController,
-                         // readOnly: true,
+                          //readOnly: true,
                           decoration: const InputDecoration(
                             labelText: "Device ID",
                             border: OutlineInputBorder(),

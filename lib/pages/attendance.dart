@@ -1,35 +1,71 @@
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '/services/attendance_service_api.dart'; 
+import '/helpers/device_helper.dart';
+import '/helpers/location_helper.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
+  
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
 class _AttendancePageState extends State<AttendancePage> {
+  int _selectedIndex = 0;
   bool isInsideOffice = false;
   bool isCheckedIn = false;
   String statusMessage = "Checking location...";
   Position? currentPosition;
 
-  // ✅ অফিসের নির্দিষ্ট লোকেশন সেট করো
-  final double officeLatitude = 23.8103; // উদাহরণস্বরূপ: ঢাকা
-  final double officeLongitude = 90.4125;
-  final double allowedRadius = 7000; // 100 মিটার এর মধ্যে হলে চেক-ইন সম্ভব
+  double? officeLatitude;
+  double? officeLongitude;
+  double? allowedRadius;
 
   @override
   void initState() {
     super.initState();
-    _checkLocationPermission();
-    Timer.periodic(const Duration(seconds: 5), (timer) {
-      _getCurrentLocation();
-    });
+    _checkLoginStatus(); // ✅ প্রথমে লগইন স্ট্যাটাস যাচাই করো
+  }  
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null || token.isEmpty) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      // 🟢 geofancing ডেটা লোড করো
+      String? geoJson = prefs.getString('geofancing');
+      if (geoJson != null) {
+        List<dynamic> geofencingList = jsonDecode(geoJson);
+
+        // উদাহরণস্বরূপ আমরা প্রথম geofence টা নেব
+        if (geofencingList.isNotEmpty) {
+          officeLatitude = double.parse(geofencingList[0]['latitude']);
+          officeLongitude = double.parse(geofencingList[0]['longitude']);
+          allowedRadius = double.parse(geofencingList[0]['radius'].toString());
+        }
+      }
+
+      // ✅ যদি geofence পাওয়া যায় তবে লোকেশন আপডেট শুরু করো
+      if (officeLatitude != null && officeLongitude != null && allowedRadius != null) {
+        _checkLocationPermission();
+        Timer.periodic(const Duration(seconds: 5), (timer) {
+          _getCurrentLocation();
+        });
+      } else {
+        setState(() => statusMessage = "No geofencing data found!");
+      }
+    }
   }
 
-  // ✅ লোকেশন পারমিশন চেক
+  // নিচের অংশ একই থাকবে (লোকেশন, চেকইন ইত্যাদি)
   Future<void> _checkLocationPermission() async {
     LocationPermission permission;
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -54,78 +90,117 @@ class _AttendancePageState extends State<AttendancePage> {
     _getCurrentLocation();
   }
 
-  // ✅ বর্তমান লোকেশন পাওয়া
+  // Future<void> _getCurrentLocation() async {
+  //   try {
+  //     Position position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high,
+  //     );
+  //     setState(() => currentPosition = position);
+  //     _checkProximity(position);
+  //   } catch (e) {
+  //     setState(() => statusMessage = "Error getting location: $e");
+  //   }
+  // }
+
   Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      setState(() => currentPosition = position);
-      _checkProximity(position);
-    } catch (e) {
-      setState(() => statusMessage = "Error getting location: $e");
-    }
+  Position? position = await LocationHelper.getCurrentLocation();
+
+  if (position == null) {
+    setState(() => statusMessage = "⚠️ Unable to get current location");
+    return;
   }
 
-  // ✅ অফিস এলাকায় আছি কিনা চেক
+  setState(() => currentPosition = position);
+  _checkProximity(position);
+}
+
+  
   void _checkProximity(Position position) {
-    double distance = Geolocator.distanceBetween(
-      officeLatitude,
-      officeLongitude,
-      position.latitude,
-      position.longitude,
-    );
+  if (officeLatitude == null || officeLongitude == null || allowedRadius == null) {
+    setState(() => statusMessage = "Geofence data missing!");
+    return;
+  }
 
-    if (distance <= allowedRadius) {
-      setState(() {
-        isInsideOffice = true;
-        statusMessage = "You are inside the office area.";
-      });
-    } else {
-      setState(() {
-        isInsideOffice = false;
-        statusMessage = "You are outside the office area!";
-      });
+  double distance = Geolocator.distanceBetween(
+    officeLatitude!,
+    officeLongitude!,
+    position.latitude,
+    position.longitude,
+  );
 
-      // বাইরে গেলে Auto Check-out
-      if (isCheckedIn) {
-        _autoCheckOut();
-      }
+  if (distance <= allowedRadius!) {
+    setState(() {
+      isInsideOffice = true;
+      statusMessage = "You are inside the office area.";
+    });
+  } else {
+    setState(() {
+      isInsideOffice = false;
+      statusMessage = "You are outside the office area!";
+    });
+
+    if (isCheckedIn) {
+      _autoCheckOut(); // Auto check-out backend update
     }
   }
+}
 
-  // ✅ Check-in ফাংশন
-  void _checkIn() {
-    setState(() {
-      isCheckedIn = true;
-      statusMessage = "✅ Checked in successfully!";
-    });
-  }
+  void _checkIn() async {
+  if (currentPosition == null) return;
 
-  // ✅ Auto Check-out ফাংশন
-  void _autoCheckOut() {
-    setState(() {
-      isCheckedIn = false;
-      statusMessage = "⚠️ You left the office area. Auto checked-out!";
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Auto Checked Out due to leaving area."),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
+  setState(() => statusMessage = "⏳ Checking in...");
+  String deviceId = await DeviceHelper.getDeviceId();
 
+  final message = await AttendanceApiService.checkIn(
+    latitude: currentPosition!.latitude,
+    longitude: currentPosition!.longitude,
+    deviceId: deviceId, // ডিভাইস আইডি
+  );
+
+  setState(() {
+    isCheckedIn = message.toLowerCase().contains("success"); // backend অনুযায়ী
+    statusMessage = message;
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
+}
+
+void _autoCheckOut() async {
+  if (currentPosition == null) return;
+
+  setState(() => statusMessage = "⏳ Checking out...");
+
+  final message = await AttendanceApiService.checkOut(
+    latitude: currentPosition!.latitude,
+    longitude: currentPosition!.longitude,
+  );
+
+  setState(() {
+    isCheckedIn = false;
+    statusMessage = message;
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
         title: const Text("Attendance"),
         backgroundColor: Colors.blue[400],
         centerTitle: true,
       ),
+
+      
+
       body: Center(
+        
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -151,19 +226,19 @@ class _AttendancePageState extends State<AttendancePage> {
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: isInsideOffice && !isCheckedIn
-                    ? _checkIn
-                    : null, // ✅ কেবল অফিস এলাকায় থাকলে সক্রিয়
+                onPressed: _checkIn, // সবসময় কাজ করবে
                 icon: const Icon(Icons.login),
-                label: Text(isCheckedIn ? "Checked In" : "Check In"),
+                label: const Text("Check In"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isCheckedIn ? Colors.grey : Colors.blue,
+                  backgroundColor: Colors.blue,
                   minimumSize: const Size(200, 60),
                 ),
               ),
+
               const SizedBox(height: 15),
+
               ElevatedButton.icon(
-                onPressed: isCheckedIn ? _autoCheckOut : null,
+                onPressed: _autoCheckOut, // সবসময় কাজ করবে
                 icon: const Icon(Icons.logout),
                 label: const Text("Check Out"),
                 style: ElevatedButton.styleFrom(
@@ -175,6 +250,30 @@ class _AttendancePageState extends State<AttendancePage> {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex, // keeps track of the selected tab
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index; // change tab
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Back',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      ),
+      
     );
   }
 }
+
