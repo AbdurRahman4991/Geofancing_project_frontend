@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '/services/register_service_api.dart'; // তোমার ApiService file import করো
+import '/services/register_service_api.dart'; 
 
 class Register extends StatefulWidget {
   @override
@@ -8,6 +8,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  int _selectedIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final _employeeIdController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -127,8 +128,7 @@ class _RegisterState extends State<Register> {
                                     });
 
                                     if (message != null &&
-                                        message.toLowerCase().contains('success')) {
-                                      // ✅ সফল হলে লগইন পেজে নিয়ে যাওয়া হবে
+                                        message.toLowerCase().contains('success')) {                                     
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text('Registration successful!'),
@@ -168,6 +168,33 @@ class _RegisterState extends State<Register> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex, // keeps track of the selected tab
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index; // change tab
+          });
+            if (index == 0) {
+            Navigator.pushNamed(context, '/');
+            } else if (index == 1) {
+              Navigator.pushNamed(context, '/profile');
+            }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Pfofile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

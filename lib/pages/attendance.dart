@@ -10,12 +10,9 @@ import '/helpers/location_helper.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
-  
-
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
-
 class _AttendancePageState extends State<AttendancePage> {
   int _selectedIndex = 0;
   bool isInsideOffice = false;
@@ -30,7 +27,7 @@ class _AttendancePageState extends State<AttendancePage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus(); // ✅ প্রথমে লগইন স্ট্যাটাস যাচাই করো
+    _checkLoginStatus(); 
   }  
 
   Future<void> _checkLoginStatus() async {
@@ -40,20 +37,18 @@ class _AttendancePageState extends State<AttendancePage> {
     if (token == null || token.isEmpty) {
       if (mounted) Navigator.pushReplacementNamed(context, '/login');
     } else {
-      // 🟢 geofancing ডেটা লোড করো
+      
       String? geoJson = prefs.getString('geofancing');
       if (geoJson != null) {
         List<dynamic> geofencingList = jsonDecode(geoJson);
 
-        // উদাহরণস্বরূপ আমরা প্রথম geofence টা নেব
+        
         if (geofencingList.isNotEmpty) {
           officeLatitude = double.parse(geofencingList[0]['latitude']);
           officeLongitude = double.parse(geofencingList[0]['longitude']);
           allowedRadius = double.parse(geofencingList[0]['radius'].toString());
         }
       }
-
-      // ✅ যদি geofence পাওয়া যায় তবে লোকেশন আপডেট শুরু করো
       if (officeLatitude != null && officeLongitude != null && allowedRadius != null) {
         _checkLocationPermission();
         Timer.periodic(const Duration(seconds: 5), (timer) {
@@ -65,7 +60,7 @@ class _AttendancePageState extends State<AttendancePage> {
     }
   }
 
-  // নিচের অংশ একই থাকবে (লোকেশন, চেকইন ইত্যাদি)
+  
   Future<void> _checkLocationPermission() async {
     LocationPermission permission;
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -89,18 +84,6 @@ class _AttendancePageState extends State<AttendancePage> {
 
     _getCurrentLocation();
   }
-
-  // Future<void> _getCurrentLocation() async {
-  //   try {
-  //     Position position = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.high,
-  //     );
-  //     setState(() => currentPosition = position);
-  //     _checkProximity(position);
-  //   } catch (e) {
-  //     setState(() => statusMessage = "Error getting location: $e");
-  //   }
-  // }
 
   Future<void> _getCurrentLocation() async {
   Position? position = await LocationHelper.getCurrentLocation();
@@ -140,7 +123,7 @@ class _AttendancePageState extends State<AttendancePage> {
     });
 
     if (isCheckedIn) {
-      _autoCheckOut(); // Auto check-out backend update
+      _autoCheckOut(); 
     }
   }
 }
@@ -154,11 +137,11 @@ class _AttendancePageState extends State<AttendancePage> {
   final message = await AttendanceApiService.checkIn(
     latitude: currentPosition!.latitude,
     longitude: currentPosition!.longitude,
-    deviceId: deviceId, // ডিভাইস আইডি
+    deviceId: deviceId, 
   );
 
   setState(() {
-    isCheckedIn = message.toLowerCase().contains("success"); // backend অনুযায়ী
+    isCheckedIn = message.toLowerCase().contains("success"); 
     statusMessage = message;
   });
 
@@ -226,7 +209,7 @@ void _autoCheckOut() async {
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: _checkIn, // সবসময় কাজ করবে
+                onPressed: _checkIn, 
                 icon: const Icon(Icons.login),
                 label: const Text("Check In"),
                 style: ElevatedButton.styleFrom(
@@ -238,7 +221,7 @@ void _autoCheckOut() async {
               const SizedBox(height: 15),
 
               ElevatedButton.icon(
-                onPressed: _autoCheckOut, // সবসময় কাজ করবে
+                onPressed: _autoCheckOut,
                 icon: const Icon(Icons.logout),
                 label: const Text("Check Out"),
                 style: ElevatedButton.styleFrom(
@@ -256,6 +239,11 @@ void _autoCheckOut() async {
           setState(() {
             _selectedIndex = index; // change tab
           });
+          if (index == 0) {
+            Navigator.pushNamed(context, '/');
+            } else if (index == 1) {
+              Navigator.pushNamed(context, '/profile');
+            }
         },
         items: const [
           BottomNavigationBarItem(
@@ -264,7 +252,7 @@ void _autoCheckOut() async {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Back',
+            label: 'Profile',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

@@ -5,10 +5,12 @@ import '/helpers/device_helper.dart';
 import '/helpers/location_helper.dart';
 
 class Login extends StatefulWidget {
+   
   @override
   _LoginState createState() => _LoginState();
 }
 class _LoginState extends State<Login> {
+  int _selectedIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -23,7 +25,7 @@ class _LoginState extends State<Login> {
     _getCurrentLocation();
   }
 
-  // ✅ ডিভাইস আইডি আনো
+
   Future<void> _loadDeviceInfo() async {
     String deviceId = await DeviceHelper.getDeviceId();
     setState(() {
@@ -163,7 +165,7 @@ class _LoginState extends State<Login> {
                               String latitude = _latitudeController.text.trim();
                               String longitude = _longitudeController.text.trim();
 
-                              // ✅ API কল
+                              // ✅ API Call
                               String? result = await ApiService.loginUser(
                                 employeeId,
                                 phone,
@@ -172,7 +174,7 @@ class _LoginState extends State<Login> {
                                 longitude,
                               );
 
-                              // ✅ ফলাফল যাচাই
+                             
                               if (result != null && result.toLowerCase().contains('success')) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -181,7 +183,7 @@ class _LoginState extends State<Login> {
                                   ),
                                 );
 
-                                // ✅ ১ সেকেন্ড পর Attendance পেজে যাও
+                                
                                 await Future.delayed(const Duration(seconds: 1));
                                 Navigator.pushReplacementNamed(context, '/attendance');
                               } else {
@@ -214,6 +216,33 @@ class _LoginState extends State<Login> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex, // keeps track of the selected tab
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index; // change tab
+          });
+          if (index == 0) {
+            Navigator.pushNamed(context, '/');
+            } else if (index == 1) {
+              Navigator.pushNamed(context, '/profile');
+            }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

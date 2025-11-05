@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/pages/attendance_history.dart';
 import 'pages/register.dart';
 import 'pages/login.dart';
 import 'pages/attendance.dart';
@@ -7,12 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   
-  const MyApp({super.key});
-  
-  
+  const MyApp({super.key});    
   @override
   Widget build(BuildContext context) {
     WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +31,10 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) =>  Register());
           case '/login':
           return MaterialPageRoute(builder: (_) => Login());
-          case '/attendance':
-          return MaterialPageRoute(builder: (_) => AttendancePage());
+          case '/attendance':                  
+          return MaterialPageRoute(builder: (_) => const AttendancePage());
+          case '/attendance-history':
+          return MaterialPageRoute(builder: (_) => AttendanceHistory());
           default:
             return MaterialPageRoute(builder: (_) => const HomePage());
         }
@@ -52,8 +52,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
-  int _selectedIndex =0;
+  //int _currentIndex = 0;
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -94,14 +94,14 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pushNamed(context, '/attendance');
               }
               ),
+              ListTile(
+                title: const Text("Attendance History"),
+                leading: const Icon(Icons.history),
+                onTap: (){
+                  Navigator.pushNamed(context, '/attendance-history');
+                },
+              ),
             
-            // ListTile(
-            //   title: const Text("Logout"),
-            //   leading: const Icon(Icons.logout),
-            //   onTap: () {
-            //     Navigator.pushNamed(context, '/logout');
-            //   },
-            // ),
             ListTile(
               title: const Text("Logout"),
               leading: const Icon(Icons.logout),
@@ -135,6 +135,11 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _selectedIndex = index; // change tab
           });
+          if (index == 0) {
+          Navigator.pushNamed(context, '/');
+          } else if (index == 1) {
+            Navigator.pushNamed(context, '/profile');
+          }
         },
         items: const [
           BottomNavigationBarItem(
@@ -143,7 +148,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Back',
+            label: 'Profile',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
