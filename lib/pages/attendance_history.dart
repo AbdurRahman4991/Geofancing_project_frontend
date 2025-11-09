@@ -410,7 +410,15 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                       setState(() => selectedMonth = value);
                       fetchAttendanceData();
                     },
+                      // 🧩 এই অংশটাই গুরুত্বপূর্ণ
+                    dropdownStyleData: const DropdownStyleData(
+                      maxHeight: 200, // ড্রপডাউনের সর্বোচ্চ উচ্চতা
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                    ),
                   ),
+                  
                   const SizedBox(width: 10),
 
                   // ✅ Year Filter
