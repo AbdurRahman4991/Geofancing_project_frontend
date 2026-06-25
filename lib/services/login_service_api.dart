@@ -34,6 +34,14 @@ class ApiService {
          if (data['geofancing'] != null) {
             await prefs.setString('geofancing', jsonEncode(data['geofancing']));
           }
+          
+        // User save
+        if (data['user'] != null) {
+          await prefs.setString(
+            'user',
+            jsonEncode(data['user']),
+          );
+        }
 
         return data['message'] ?? "Login successful.";
       } else if (response.statusCode == 422) {

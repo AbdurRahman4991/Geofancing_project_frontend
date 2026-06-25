@@ -4,8 +4,10 @@ import 'pages/register.dart';
 import 'pages/login.dart';
 import 'pages/attendance.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'pages/location_setting.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
@@ -13,7 +15,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});    
   @override
   Widget build(BuildContext context) {
-    WidgetsFlutterBinding.ensureInitialized();
+    //WidgetsFlutterBinding.ensureInitialized();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Geofance',
@@ -30,11 +32,13 @@ class MyApp extends StatelessWidget {
           case '/register':
             return MaterialPageRoute(builder: (_) =>  Register());
           case '/login':
-          return MaterialPageRoute(builder: (_) => Login());
+            return MaterialPageRoute(builder: (_) => Login());
+          case '/location-setting':
+            return MaterialPageRoute(builder: (_) => GeofenceMapPage());
           case '/attendance':                  
-          return MaterialPageRoute(builder: (_) => const AttendancePage());
+            return MaterialPageRoute(builder: (_) => const AttendancePage());
           case '/attendance-history':
-          return MaterialPageRoute(builder: (_) => AttendanceHistory());
+            return MaterialPageRoute(builder: (_) => AttendanceHistory());
           default:
             return MaterialPageRoute(builder: (_) => const HomePage());
         }
@@ -87,6 +91,14 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pushNamed(context, '/login');
               },
             ),
+            ListTile(
+              title: const Text("Location setting"),
+              leading: const Icon(Icons.location_searching),
+              onTap: () {
+                Navigator.pushNamed(context, '/location-setting');
+              },
+            ),
+
             ListTile(
               title: const Text("Attendance"),
               leading: const Icon(Icons.present_to_all),
