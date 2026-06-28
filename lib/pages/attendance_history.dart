@@ -142,90 +142,7 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
-          children: [
-            // 🔽 Filters with Scrollable Row
-            // SingleChildScrollView(
-            //   scrollDirection: Axis.horizontal,
-            //   child: Row(
-            //     children: [
-            //       // ✅ Status Filter
-            //       DropdownButtonFormField2<String>(
-            //         value: selectedStatus,
-            //         hint: const Text("Status"),
-            //         items: const [
-            //           DropdownMenuItem(value: 'Checked In', child: Text('Checked In')),
-            //           DropdownMenuItem(value: 'Checked Out', child: Text('Checked Out')),
-            //           DropdownMenuItem(value: 'Absent', child: Text('Absent')),
-            //         ],
-            //         onChanged: (value) {
-            //           setState(() => selectedStatus = value);
-            //           fetchAttendanceData();
-            //         },
-            //       ),
-            //       const SizedBox(width: 10),
-
-            //       // ✅ Month Filter
-            //       DropdownButton2<String>(
-            //         value: selectedMonth,
-            //         hint: const Text("Month"),
-            //         items: const [
-            //           DropdownMenuItem(value: 'january', child: Text('January')),
-            //           DropdownMenuItem(value: 'february', child: Text('February')),
-            //           DropdownMenuItem(value: 'march', child: Text('March')),
-            //           DropdownMenuItem(value: 'april', child: Text('April')),
-            //           DropdownMenuItem(value: 'may', child: Text('May')),
-            //           DropdownMenuItem(value: 'june', child: Text('June')),
-            //           DropdownMenuItem(value: 'july', child: Text('July')),
-            //           DropdownMenuItem(value: 'august', child: Text('August')),
-            //           DropdownMenuItem(value: 'september', child: Text('September')),
-            //           DropdownMenuItem(value: 'october', child: Text('October')),
-            //           DropdownMenuItem(value: 'november', child: Text('November')),
-            //           DropdownMenuItem(value: 'december', child: Text('December')),
-            //         ],
-            //         onChanged: (value) {
-            //           setState(() => selectedMonth = value);
-            //           fetchAttendanceData();
-            //         },
-            //           // 🧩 এই অংশটাই গুরুত্বপূর্ণ
-            //         dropdownStyleData: const DropdownStyleData(
-            //           maxHeight: 200, // ড্রপডাউনের সর্বোচ্চ উচ্চতা
-            //           decoration: BoxDecoration(
-            //             borderRadius: BorderRadius.all(Radius.circular(8)),
-            //           ),
-            //         ),
-            //       ),
-                  
-            //       const SizedBox(width: 10),
-
-            //       // ✅ Year Filter
-            //       DropdownButton2<String>(
-            //         value: selectedYear,
-            //         hint: const Text("Year"),
-            //         items: const [
-            //           DropdownMenuItem(value: '2025', child: Text('2025')),
-            //           DropdownMenuItem(value: '2024', child: Text('2024')),
-            //           DropdownMenuItem(value: '2023', child: Text('2023')),
-            //         ],
-            //         onChanged: (value) {
-            //           setState(() => selectedYear = value);
-            //           fetchAttendanceData();
-            //         },
-            //       ),
-            //       const SizedBox(width: 10),
-
-            //       // ✅ Clear Button
-            //       ElevatedButton.icon(
-            //         onPressed: clearFilters,
-            //         icon: const Icon(Icons.clear, size: 18),
-            //         label: const Text("Clear"),
-            //         style: ElevatedButton.styleFrom(
-            //           backgroundColor: Colors.redAccent,
-            //           foregroundColor: Colors.white,
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
+          children: [           
             SingleChildScrollView(
   scrollDirection: Axis.horizontal,
   child: Row(
@@ -369,5 +286,3 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
     );
   }
 }
-
-
