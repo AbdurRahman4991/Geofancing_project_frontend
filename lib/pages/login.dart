@@ -185,7 +185,7 @@ class _LoginState extends State<Login> {
 
                                 
                                 await Future.delayed(const Duration(seconds: 1));
-                                Navigator.pushReplacementNamed(context, '/attendance');
+                                Navigator.pushReplacementNamed(context, '/HomePage()');
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -217,33 +217,33 @@ class _LoginState extends State<Login> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // keeps track of the selected tab
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index; // change tab
-          });
-          if (index == 0) {
-            Navigator.pushNamed(context, '/');
-            } else if (index == 1) {
-              Navigator.pushNamed(context, '/profile');
-            }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   currentIndex: _selectedIndex, // keeps track of the selected tab
+      //   onTap: (index) {
+      //     setState(() {
+      //       _selectedIndex = index; // change tab
+      //     });
+      //     if (index == 0) {
+      //       Navigator.pushNamed(context, '/');
+      //       } else if (index == 1) {
+      //         Navigator.pushNamed(context, '/profile');
+      //       }
+      //   },
+      //   items: const [
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.home),
+      //       label: 'Home',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.person),
+      //       label: 'Profile',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.settings),
+      //       label: 'Settings',
+      //     ),
+      //   ],
+      // ),
     );
   }
 }

@@ -1,4 +1,4 @@
-name: geofancing_project
+name: TrackingApp
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -42,6 +42,7 @@ dependencies:
   permission_handler: ^12.0.3
   flutter_background_service: ^5.1.0
   flutter_background_service_android: ^6.3.0
+  flutter_launcher_icons: ^0.14.4
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -59,6 +60,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -69,6 +76,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/logo.jpeg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

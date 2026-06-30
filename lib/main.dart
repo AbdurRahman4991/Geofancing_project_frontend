@@ -7,10 +7,11 @@ import 'pages/location_setting.dart';
 import 'services/background_location_service.dart';
 import 'pages/home.dart';
 import 'pages/location_setting_list.dart';
+import 'splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   //await BackgroundLocationService.initializeService();
+  await BackgroundLocationService.initializeService();
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-
+      home: const SplashScreen(),
       // Handle named routes
       onGenerateRoute: (settings) {
         final uri = Uri.parse(settings.name ?? '/');
