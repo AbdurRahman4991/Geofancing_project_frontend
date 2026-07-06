@@ -80,7 +80,8 @@ class _LocationSettingListState extends State<LocationSettingList> {
                     child: Icon(Icons.location_on),
                   ),
                   title: Text(
-                    item["company"]["company_name"],
+                     item["company"]?["company_name"] ?? " ",
+                    
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),

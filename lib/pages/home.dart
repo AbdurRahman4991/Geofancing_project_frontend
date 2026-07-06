@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,6 +11,29 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   //int _currentIndex = 0;
   int _selectedIndex = 0;
+  String userName = "";
+  String userEmail = "";
+
+  @override
+void initState() {
+  super.initState();
+  loadUser();
+}
+
+Future<void> loadUser() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  final userJson = prefs.getString('user');
+
+  if (userJson != null) {
+    final user = jsonDecode(userJson);
+
+    setState(() {
+      userName = user['name'] ?? "";
+      userEmail = user['email'] ?? "";
+    });
+  }
+}
 
   Widget _homeMenu(
   BuildContext context,
@@ -59,14 +83,26 @@ class _HomePageState extends State<HomePage> {
       drawer: Drawer(
         child: ListView(
           children: [
-            const UserAccountsDrawerHeader(
-              accountName: Text("Abdur Rahman"),
-              accountEmail: Text("engrabdurrahman4991@gmail.com"),
+             
+            UserAccountsDrawerHeader(
+              accountName: Text(userName),
+              accountEmail: Text(userEmail),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
-                child: Text("A", style: TextStyle(fontSize: 30)),
+                child: Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : "A",
+                  style: const TextStyle(fontSize: 30),
+                ),
               ),
             ),
+            // UserAccountsDrawerHeader(
+            //   accountName: Text("Abdur Rahman"),
+            //   accountEmail: Text("engrabdurrahman4991@gmail.com"),
+            //   currentAccountPicture: CircleAvatar(
+            //     backgroundColor: Colors.white,
+            //     child: Text("A", style: TextStyle(fontSize: 30)),
+            //   ),
+            // ),
             ListTile(
               title: const Text("Register"),
               leading: const Icon(Icons.app_registration_rounded),
@@ -81,36 +117,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pushNamed(context, '/login');
               },
             ),
-            // ListTile(
-            //   title: const Text("Location setting"),
-            //   leading: const Icon(Icons.location_searching),
-            //   onTap: () {
-            //     Navigator.pushNamed(context, '/location-setting');
-            //   },
-            // ),
-            // ListTile(
-            //   title: const Text("Location setting list"),
-            //   leading: const Icon(Icons.location_searching),
-            //   onTap: () {
-            //     Navigator.pushNamed(context, '/location-setting-list');
-            //   },
-            // ),
-
-            // ListTile(
-            //   title: const Text("Attendance"),
-            //   leading: const Icon(Icons.present_to_all),
-            //   onTap: () {
-            //     Navigator.pushNamed(context, '/attendance');
-            //   }
-            //   ),
-            //   ListTile(
-            //     title: const Text("Attendance History"),
-            //     leading: const Icon(Icons.history),
-            //     onTap: (){
-            //       Navigator.pushNamed(context, '/attendance-history');
-            //     },
-            //   ),
-            
+                        
             ListTile(
               title: const Text("Logout"),
               leading: const Icon(Icons.logout),

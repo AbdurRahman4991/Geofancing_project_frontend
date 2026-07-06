@@ -4,21 +4,16 @@ import 'package:geolocator/geolocator.dart';
 import '../services/location_setting_service.dart';
 import '../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 class GeofenceMapPage extends StatefulWidget {
    final dynamic geofence;
   const GeofenceMapPage({super.key, this.geofence});
-
   @override
   State<GeofenceMapPage> createState() => _GeofenceMapPageState();
 }
-
 class _GeofenceMapPageState extends State<GeofenceMapPage> {
   GoogleMapController? mapController;
 
   LatLng? selectedLocation;
-
-
   final TextEditingController latController = TextEditingController();
   final TextEditingController lngController = TextEditingController();
   final TextEditingController radiusController =
@@ -29,22 +24,10 @@ class _GeofenceMapPageState extends State<GeofenceMapPage> {
     super.initState();
     getCurrentLocation();
     checkAuth();
-    
+  
   }
-// Future<void> checkAuth() async {
-//   final prefs = await SharedPreferences.getInstance();
-//   final token = prefs.getString('access_token');
 
-//   if (token == null || token.isEmpty) {
-//     if (!mounted) return;
-//     Navigator.pushReplacementNamed(context, '/login');
-//     return;
-//   }
-
-//   getCurrentLocation();
-// }
   int? geofenceId;
-
 Future<void> checkAuth() async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('access_token');
@@ -162,94 +145,56 @@ Future<void> checkAuth() async {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
+                            final userId = await AuthService.getUserId();
+                            final companyId = await AuthService.getCompanyId();
 
-  final userId = await AuthService.getUserId();
-  final companyId = await AuthService.getCompanyId();
+                            bool success;
 
-  bool success;
+                            if (widget.geofence == null) {
 
-  if (widget.geofence == null) {
+                              success = await GeofenceService.createGeofence(
+                                companyId: companyId!,
+                                userId: userId!,
+                                latitude: double.parse(latController.text),
+                                longitude: double.parse(lngController.text),
+                                radius: double.parse(radiusController.text),
+                              );
 
-    success = await GeofenceService.createGeofence(
-      companyId: companyId!,
-      userId: userId!,
-      latitude: double.parse(latController.text),
-      longitude: double.parse(lngController.text),
-      radius: double.parse(radiusController.text),
-    );
+                            } else {
 
-  } else {
+                              success = await GeofenceService.updateGeofence(
+                                id: geofenceId!,
+                                companyId: companyId!,
+                                userId: userId!,
+                                latitude: double.parse(latController.text),
+                                longitude: double.parse(lngController.text),
+                                radius: double.parse(radiusController.text),
+                              );
 
-    success = await GeofenceService.updateGeofence(
-      id: geofenceId!,
-      companyId: companyId!,
-      userId: userId!,
-      latitude: double.parse(latController.text),
-      longitude: double.parse(lngController.text),
-      radius: double.parse(radiusController.text),
-    );
+                            }
 
-  }
+                            if(success){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    widget.geofence == null
+                                        ? "Geofence Created"
+                                        : "Geofence Updated",
+                                  ),
+                                ),
+                              );
 
-  if(success){
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.geofence == null
-              ? "Geofence Created"
-              : "Geofence Updated",
-        ),
-      ),
-    );
+                              Navigator.pop(context, true);
 
-    Navigator.pop(context, true);
+                            }else{
 
-  }else{
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Operation Failed"),
-      ),
-    );
-
-  }
-
-},
-                          // onPressed: () async {
-                          //   final userId = await AuthService.getUserId();
-                          //   final companyId = await AuthService.getCompanyId();
-
-                          //     if (userId == null || companyId == null) {
-                          //       ScaffoldMessenger.of(context).showSnackBar(
-                          //         const SnackBar(
-                          //           content: Text("User information not found"),
-                          //         ),
-                          //       );
-                          //       return;
-                          //     }
-
-                          //     bool success = await GeofenceService.createGeofence(
-                          //       companyId: companyId,
-                          //       userId: userId,
-                          //       latitude: double.parse(latController.text),
-                          //       longitude: double.parse(lngController.text),
-                          //       radius: double.parse(radiusController.text),
-                          //     );
-
-                          //     if (success) {
-                          //       ScaffoldMessenger.of(context).showSnackBar(
-                          //         const SnackBar(
-                          //           content: Text("Geofence Created Successfully"),
-                          //         ),
-                          //       );
-                          //     } else {
-                          //       ScaffoldMessenger.of(context).showSnackBar(
-                          //         const SnackBar(
-                          //           content: Text("Failed to Create Geofence"),
-                          //         ),
-                          //       );
-                          //     }
-                          //   },
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Operation Failed"),
+                                ),
+                              );
+                            }
+                          },                          
                             // child: const Text("Save Geofence"),
                             child: Text(
                               widget.geofence == null

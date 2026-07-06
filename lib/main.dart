@@ -8,7 +8,6 @@ import 'services/background_location_service.dart';
 import 'pages/home.dart';
 import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackgroundLocationService.initializeService();
@@ -19,7 +18,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});    
   @override
   Widget build(BuildContext context) {
-    //WidgetsFlutterBinding.ensureInitialized();
+   // WidgetsFlutterBinding.ensureInitialized();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Geofance',

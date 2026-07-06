@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '/services/login_service_api.dart';
 import '/helpers/device_helper.dart';
 import '/helpers/location_helper.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
    
@@ -24,8 +26,6 @@ class _LoginState extends State<Login> {
     _loadDeviceInfo();
     _getCurrentLocation();
   }
-
-
   Future<void> _loadDeviceInfo() async {
     String deviceId = await DeviceHelper.getDeviceId();
     setState(() {
@@ -42,7 +42,6 @@ class _LoginState extends State<Login> {
     });
   }
 }
-
 
   @override
   Widget build(BuildContext context) {
@@ -175,17 +174,37 @@ class _LoginState extends State<Login> {
                               );
 
                              
-                              if (result != null && result.toLowerCase().contains('success')) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Login successful!"),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
+                              // if (result != null && result.toLowerCase().contains('success')) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(
+                              //     const SnackBar(
+                              //       content: Text("Login successful!"),
+                              //       backgroundColor: Colors.green,
+                              //     ),
+                              //   );
 
                                 
-                                await Future.delayed(const Duration(seconds: 1));
-                                Navigator.pushReplacementNamed(context, '/HomePage()');
+                              //   await Future.delayed(const Duration(seconds: 1));
+                              //   Navigator.pushReplacementNamed(context, '/HomePage()');
+                              if (result != null && result.toLowerCase().contains('success')) {
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Login successful!"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  
+                                  // 🚀 START BACKGROUND SERVICE
+                                  final service = FlutterBackgroundService();
+
+                                  if (!await service.isRunning()) {
+                                    await service.startService();
+                                  }
+
+                                  await Future.delayed(const Duration(seconds: 1));
+
+                                  Navigator.pushReplacementNamed(context, '/home');
+
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

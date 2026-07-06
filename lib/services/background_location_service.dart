@@ -18,6 +18,15 @@ class BackgroundLocationService {
       ),
       iosConfiguration: IosConfiguration(),
     );
+    // যদি service আগে থেকে চালু না থাকে তাহলে start করুন
+    bool isRunning = await service.isRunning();
+
+    if (!isRunning) {
+      await service.startService();
+      print("Background Service Started");
+    } else {
+      print("Background Service Already Running");
+    }
   }
 }
 
