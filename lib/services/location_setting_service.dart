@@ -62,6 +62,7 @@ class GeofenceService {
   static Future<bool> createGeofence({
     required int companyId,
     required int userId,
+    required String firmName, 
     required double latitude,
     required double longitude,
     required double radius,
@@ -73,6 +74,7 @@ class GeofenceService {
         body: jsonEncode({
           "company_id": companyId,
           "user_id": userId,
+          "firm_name": firmName,
           "latitude": latitude,
           "longitude": longitude,
           "radius": radius,
@@ -105,6 +107,7 @@ class GeofenceService {
     required int id,
     required int companyId,
     required int userId,
+    required String firmName, 
     required double latitude,
     required double longitude,
     required double radius,
@@ -116,6 +119,7 @@ class GeofenceService {
         body: jsonEncode({
           "company_id": companyId,
           "user_id": userId,
+          "firm_name": firmName,
           "latitude": latitude,
           "longitude": longitude,
           "radius": radius,

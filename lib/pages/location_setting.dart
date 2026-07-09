@@ -16,6 +16,7 @@ class _GeofenceMapPageState extends State<GeofenceMapPage> {
   LatLng? selectedLocation;
   final TextEditingController latController = TextEditingController();
   final TextEditingController lngController = TextEditingController();
+  final TextEditingController firmNameController = TextEditingController();
   final TextEditingController radiusController =
       TextEditingController(text: "100");
 
@@ -119,14 +120,22 @@ Future<void> checkAuth() async {
                   child: Column(
                     children: [
                       TextField(
-                        controller: latController,
+                        controller: firmNameController,
                         decoration: const InputDecoration(
-                          labelText: "Latitude",
+                          labelText: "Firm Name",
+                        ),
+                      ),
+                      TextField(
+                        controller: latController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: "Latitude",                          
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: lngController,
+                        readOnly: true,
                         decoration: const InputDecoration(
                           labelText: "Longitude",
                         ),
@@ -155,6 +164,7 @@ Future<void> checkAuth() async {
                               success = await GeofenceService.createGeofence(
                                 companyId: companyId!,
                                 userId: userId!,
+                                firmName: firmNameController.text.trim(),
                                 latitude: double.parse(latController.text),
                                 longitude: double.parse(lngController.text),
                                 radius: double.parse(radiusController.text),
@@ -166,6 +176,7 @@ Future<void> checkAuth() async {
                                 id: geofenceId!,
                                 companyId: companyId!,
                                 userId: userId!,
+                                firmName: firmNameController.text.trim(),
                                 latitude: double.parse(latController.text),
                                 longitude: double.parse(lngController.text),
                                 radius: double.parse(radiusController.text),
@@ -178,8 +189,8 @@ Future<void> checkAuth() async {
                                 SnackBar(
                                   content: Text(
                                     widget.geofence == null
-                                        ? "Geofence Created"
-                                        : "Geofence Updated",
+                                        ? "Location Save"
+                                        : "Location Updated",
                                   ),
                                 ),
                               );
@@ -198,8 +209,8 @@ Future<void> checkAuth() async {
                             // child: const Text("Save Geofence"),
                             child: Text(
                               widget.geofence == null
-                                  ? "Save Geofence"
-                                  : "Update Geofence",
+                                  ? "Save Location"
+                                  : "Update Location",
                             ),
                         ),
                       )

@@ -91,6 +91,7 @@ class _LocationSettingListState extends State<LocationSettingList> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text("Firm: ${item["firm_name"] ?? "-"}"),
                         Text("Latitude : ${item["latitude"]}"),
                         Text("Longitude : ${item["longitude"]}"),
                         Text("Radius : ${item["radius"]} m"),

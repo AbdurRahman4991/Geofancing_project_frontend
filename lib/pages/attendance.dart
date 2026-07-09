@@ -8,13 +8,16 @@ import '/helpers/device_helper.dart';
 import '/helpers/location_helper.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import '../services/location_setting_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../services/offline_attendance_service.dart';
+import '../helpers/network_helper.dart';
+
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
-class _AttendancePageState extends State<AttendancePage> {
-  int _selectedIndex = 0;
+class _AttendancePageState extends State<AttendancePage> {  
   bool isInsideOffice = false;
   bool isCheckedIn = false;
   String statusMessage = "Checking location...";
@@ -25,12 +28,23 @@ class _AttendancePageState extends State<AttendancePage> {
   StreamSubscription<Position>? _positionStream;
   bool _isTrackingStarted = false;
   List<dynamic> geofencingList = [];
+  StreamSubscription? connectivitySubscription;
   
   @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
+@override
+void initState() {
+  super.initState();
+  _checkLoginStatus();
+  syncOfflineAttendance();
+  connectivitySubscription =
+      Connectivity().onConnectivityChanged.listen((result) {
+    if (!result.contains(ConnectivityResult.none)) {
+      print("Internet Connected - Syncing Attendance");
+      syncOfflineAttendance();
+    }
+  });
+}
+
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
@@ -41,15 +55,11 @@ class _AttendancePageState extends State<AttendancePage> {
       return;
     }    
       // 🔥 Always latest geofence
-  await GeofenceService.syncGeofences();
-
+   await GeofenceService.syncGeofences();
     String? geoJson = prefs.getString('geofancing');
-
-
     if (geoJson != null) {
       geofencingList = jsonDecode(geoJson);
     }
-
     if (geofencingList.isNotEmpty) {
       await _checkLocationPermission();
     } else {
@@ -60,6 +70,64 @@ class _AttendancePageState extends State<AttendancePage> {
       }
     }
   }
+
+ Future<void> syncOfflineAttendance() async {
+
+  bool online = await NetworkHelper.hasInternet();
+
+  if(!online){
+    print("No internet");
+    return;
+  }
+
+
+  final data =
+      await OfflineAttendanceService.getPendingAttendance();
+
+
+  if(data == null){
+    print("No offline attendance");
+    return;
+  }
+
+
+  String message = "";
+
+
+  if(data['type']=="check_in"){
+
+    message = await AttendanceApiService.checkIn(
+      latitude:data['latitude'],
+      longitude:data['longitude'],
+      deviceId:data['device_id'],
+    );
+
+  }
+
+
+  if(data['type']=="check_out"){
+
+    message = await AttendanceApiService.checkOut(
+      latitude:data['latitude'],
+      longitude:data['longitude'],
+    );
+
+  }
+
+
+  print("SYNC RESPONSE: $message");
+
+
+  if(message.toLowerCase().contains("success")){
+
+    await OfflineAttendanceService.clear();
+
+    print("Offline attendance synced");
+
+  }
+
+}
+
   Future<void> _checkLocationPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -140,38 +208,31 @@ class _AttendancePageState extends State<AttendancePage> {
       });
       return;
     }
-
     bool matched = false;
-
     for (var geofence in geofencingList) {
       double lat = double.parse(geofence['latitude'].toString());
       double lng = double.parse(geofence['longitude'].toString());
       double radius = double.parse(geofence['radius'].toString());
-
       double distance = Geolocator.distanceBetween(
         lat,
         lng,
         position.latitude,
         position.longitude,
       );
-
       if (distance <= radius) {
         matched = true;
         break;
       }
     }
-
     setState(() {
       isInsideOffice = matched;
       statusMessage = matched
           ? "You are inside office area"
           : "You are outside office area";
     });
-
     if (matched && !isCheckedIn) {
       _checkIn();
     }
-
     if (!matched && isCheckedIn) {
       _autoCheckOut();
     }
@@ -202,6 +263,31 @@ class _AttendancePageState extends State<AttendancePage> {
     });
     String deviceId =
         await DeviceHelper.getDeviceId();
+        // Offline checking
+bool online = await NetworkHelper.hasInternet();
+
+if(!online){
+
+  await OfflineAttendanceService.saveCheckIn(
+    latitude: currentPosition!.latitude,
+    longitude: currentPosition!.longitude,
+    deviceId: deviceId,
+  );
+
+  setState(() {
+    isCheckedIn = true;
+    statusMessage = "Checked In (Offline)";
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Saved offline. Will sync later"),
+    ),
+  );
+
+  return;
+}
+
     final message =
         await AttendanceApiService.checkIn(
       latitude: currentPosition!.latitude,
@@ -230,6 +316,22 @@ class _AttendancePageState extends State<AttendancePage> {
     setState(() {
       statusMessage = "⏳ Checking out...";
     });
+bool online = await NetworkHelper.hasInternet();
+
+if(!online){
+
+ await OfflineAttendanceService.saveCheckOut(
+    latitude: currentPosition!.latitude,
+    longitude: currentPosition!.longitude,
+ );
+
+ setState(() {
+   isCheckedIn=false;
+   statusMessage="Checked Out (Offline)";
+ });
+
+ return;
+}
     final message =
         await AttendanceApiService.checkOut(
       latitude: currentPosition!.latitude,
@@ -254,11 +356,12 @@ class _AttendancePageState extends State<AttendancePage> {
       ),
     );
   }
-  @override
-  void dispose() {
-    _positionStream?.cancel();
-    super.dispose();
-  }
+@override
+void dispose() {
+  _positionStream?.cancel();
+  connectivitySubscription?.cancel();
+  super.dispose();
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -326,38 +429,7 @@ class _AttendancePageState extends State<AttendancePage> {
             ],
           ),
         ),
-      ),
-      //bottomNavigationBar:
-      // BottomNavigationBar(
-      //   currentIndex: _selectedIndex,
-      //   onTap: (index) {
-      //     setState(() {
-      //       _selectedIndex = index;
-      //     });
-      //     if (index == 0) {
-      //       Navigator.pushNamed(context, '/');
-      //     } else if (index == 1) {
-      //       Navigator.pushNamed(
-      //         context,
-      //         '/profile',
-      //       );
-      //     }
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.home),
-      //       label: 'Home',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.person),
-      //       label: 'Profile',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.settings),
-      //       label: 'Settings',
-      //     ),
-      //   ],
-      // ),
+      ),      
     );
   }
 }
