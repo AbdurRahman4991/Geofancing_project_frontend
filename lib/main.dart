@@ -8,8 +8,12 @@ import 'services/background_location_service.dart';
 import 'pages/home.dart';
 import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('attendance_offline');
   await BackgroundLocationService.initializeService();
   runApp(const MyApp());
 }
@@ -17,8 +21,7 @@ class MyApp extends StatelessWidget {
   
   const MyApp({super.key});    
   @override
-  Widget build(BuildContext context) {
-   // WidgetsFlutterBinding.ensureInitialized();
+  Widget build(BuildContext context) {   
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Geofance',

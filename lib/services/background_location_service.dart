@@ -30,19 +30,19 @@ class BackgroundLocationService {
   }
 }
 
-
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) {
+
+  service.on("stopService").listen((event) {
+    service.stopSelf();
+  });
+
   Timer.periodic(
-    const Duration(seconds: 30),
+    const Duration(seconds: 300),
     (timer) async {
       try {
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-        );
-
-        print(
-          "${position.latitude}, ${position.longitude}",
         );
 
         await EmployeeLocationService.sendLocation(

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // <-- import this
 import '/plugins/api_config.dart';
+  import 'package:flutter_background_service/flutter_background_service.dart';
 
 class ApiService {
   static Future<String?> loginUser(
@@ -65,8 +66,23 @@ class ApiService {
   }
 
   // 🗑️ Token delete করার জন্য helper (logout এর জন্য)
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
+  // static Future<void> logout() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('access_token');
+  // }
+
+
+static Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.remove('access_token');
+  await prefs.remove('user');
+  await prefs.remove('geofancing');
+
+  final service = FlutterBackgroundService();
+
+  if (await service.isRunning()) {
+    service.invoke("stopService");
   }
+}
 }

@@ -5,6 +5,7 @@ import '/helpers/device_helper.dart';
 import '/helpers/location_helper.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/background_location_service.dart';
 
 class Login extends StatefulWidget {
    
@@ -185,25 +186,21 @@ class _LoginState extends State<Login> {
                                 
                               //   await Future.delayed(const Duration(seconds: 1));
                               //   Navigator.pushReplacementNamed(context, '/HomePage()');
-                              if (result != null && result.toLowerCase().contains('success')) {
+                             if (result != null && result.toLowerCase().contains('success')) {
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Login successful!"),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  
-                                  // 🚀 START BACKGROUND SERVICE
-                                  final service = FlutterBackgroundService();
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Login successful!"),
+      backgroundColor: Colors.green,
+    ),
+  );
 
-                                  if (!await service.isRunning()) {
-                                    await service.startService();
-                                  }
+  await BackgroundLocationService.initializeService();
 
-                                  await Future.delayed(const Duration(seconds: 1));
+  await Future.delayed(const Duration(seconds: 1));
 
-                                  Navigator.pushReplacementNamed(context, '/home');
+  Navigator.pushReplacementNamed(context, '/home');
+
 
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(

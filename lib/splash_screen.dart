@@ -42,11 +42,14 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
     _checkLogin();
   }
-  Future<void> _checkLogin() async {
+Future<void> _checkLogin() async {
   await Future.delayed(const Duration(seconds: 2));
+
   final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+  final token = prefs.getString('access_token');
+
   if (!mounted) return;
+
   if (token != null && token.isNotEmpty) {
     Navigator.pushReplacement(
       context,
@@ -58,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) =>  Login(),
+        builder: (_) => Login(),
       ),
     );
   }

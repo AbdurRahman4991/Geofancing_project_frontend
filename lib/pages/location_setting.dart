@@ -17,7 +17,7 @@ class _GeofenceMapPageState extends State<GeofenceMapPage> {
   final TextEditingController latController = TextEditingController();
   final TextEditingController lngController = TextEditingController();
   final TextEditingController radiusController =
-      TextEditingController(text: "500");
+      TextEditingController(text: "100");
 
   @override
   void initState() {
