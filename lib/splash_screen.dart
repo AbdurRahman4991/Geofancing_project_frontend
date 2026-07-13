@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'pages/login.dart';
 import 'pages/Home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/background_location_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -42,28 +44,81 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
     _checkLogin();
   }
-Future<void> _checkLogin() async {
-  await Future.delayed(const Duration(seconds: 2));
+// Future<void> _checkLogin() async {
+//   await Future.delayed(const Duration(seconds: 2));
 
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('access_token');
+//   final prefs = await SharedPreferences.getInstance();
+//   final token = prefs.getString('access_token');
+
+//   if (!mounted) return;
+
+//   if (token != null && token.isNotEmpty) {
+    
+//   // Background service start
+//   //await BackgroundLocationService.initializeService();
+//     Navigator.pushReplacement(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => const HomePage(),
+//       ),
+//     );
+//   } else {
+//     Navigator.pushReplacement(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => Login(),
+//       ),
+//     );
+//   }
+// }
+Future<void> _checkLogin() async {
+
+  await Future.delayed(
+    const Duration(seconds: 2),
+  );
+
+
+  final prefs =
+      await SharedPreferences.getInstance();
+
+
+  final token =
+      prefs.getString('access_token');
+
 
   if (!mounted) return;
 
+
   if (token != null && token.isNotEmpty) {
+
+
+    // Android 13+ notification permission
+    await Permission.notification.request();
+
+
+    // Background service start
+    await BackgroundLocationService
+        .initializeService();
+
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => const HomePage(),
       ),
     );
+
+
   } else {
+
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => Login(),
       ),
     );
+
   }
 }
   @override
