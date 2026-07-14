@@ -202,7 +202,7 @@ static Future<void> createNotificationChannel() async {
 
 
     Timer.periodic(
-  const Duration(seconds: 3000),
+  const Duration(seconds: 300),
   (timer) async {
 
     print("===== TIMER RUNNING =====");

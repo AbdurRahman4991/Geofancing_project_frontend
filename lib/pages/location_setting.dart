@@ -4,6 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import '../services/location_setting_service.dart';
 import '../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
 class GeofenceMapPage extends StatefulWidget {
    final dynamic geofence;
   const GeofenceMapPage({super.key, this.geofence});
@@ -14,11 +17,12 @@ class _GeofenceMapPageState extends State<GeofenceMapPage> {
   GoogleMapController? mapController;
 
   LatLng? selectedLocation;
+  File? selectedImage;
   final TextEditingController latController = TextEditingController();
   final TextEditingController lngController = TextEditingController();
   final TextEditingController firmNameController = TextEditingController();
-  final TextEditingController radiusController =
-      TextEditingController(text: "100");
+  final TextEditingController radiusController = TextEditingController(text: "100");
+  
 
   @override
   void initState() {
@@ -56,6 +60,25 @@ Future<void> checkAuth() async {
   } else {
     getCurrentLocation();
   }
+}
+
+Future<void> takePhoto() async {
+
+  final picker = ImagePicker();
+
+  final XFile? image = await picker.pickImage(
+    source: ImageSource.camera,
+    imageQuality: 80,
+  );
+
+  if(image != null){
+
+    setState(() {
+      selectedImage = File(image.path);
+    });
+
+  }
+
 }
   Future<void> getCurrentLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
@@ -125,6 +148,19 @@ Future<void> checkAuth() async {
                           labelText: "Firm Name",
                         ),
                       ),
+
+                      ElevatedButton.icon(
+                        onPressed: takePhoto,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text("Take Office Photo"),
+                      ),
+                      if(selectedImage != null)
+                        Image.file(
+                          selectedImage!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       TextField(
                         controller: latController,
                         readOnly: true,
