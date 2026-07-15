@@ -2,27 +2,31 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
 class _HomePageState extends State<HomePage> {
-  //int _currentIndex = 0;
-  int _selectedIndex = 0;
   String userName = "";
   String userEmail = "";
+  String nearestOfficeName = "";
+  double nearestDistance = 0;  
+  double? nearestLat;
+  double? nearestLng;
 
   @override
 void initState() {
   super.initState();
   loadUser();
+  loadNearestOffice();
+
 }
 
 Future<void> loadUser() async {
   final prefs = await SharedPreferences.getInstance();
-
   final userJson = prefs.getString('user');
 
   if (userJson != null) {
@@ -32,6 +36,89 @@ Future<void> loadUser() async {
       userName = user['name'] ?? "";
       userEmail = user['email'] ?? "";
     });
+  }
+}
+
+
+Future<void> loadNearestOffice() async {
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+  if (!serviceEnabled) {
+    return;
+  }
+
+  LocationPermission permission =
+      await Geolocator.checkPermission();
+
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+  }
+
+  if (permission == LocationPermission.denied ||
+      permission == LocationPermission.deniedForever) {
+    return;
+  }
+
+  Position position = await Geolocator.getCurrentPosition();
+
+  final prefs = await SharedPreferences.getInstance();
+  final geoJson = prefs.getString("geofancing");
+
+  if (geoJson == null) return;
+
+  final offices = jsonDecode(geoJson);
+
+  double minDistance = double.infinity;
+  Map<String, dynamic>? nearestOffice;
+
+  for (final office in offices) {
+    final distance = Geolocator.distanceBetween(
+      position.latitude,
+      position.longitude,
+      double.parse(office["latitude"].toString()),
+      double.parse(office["longitude"].toString()),
+    );
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestOffice = office;
+    }
+  }
+
+  if (nearestOffice != null) {
+    print("Nearest Office Map: $nearestOffice");
+  print("Firm Name: ${nearestOffice["firm_name"]}");
+    setState(() {
+  nearestOfficeName =
+      nearestOffice!["firm_name"] ??
+      nearestOffice["user"]?["employee"]?["name"] ??
+      "Office";
+
+  nearestDistance = minDistance;
+
+  nearestLat = double.parse(
+    nearestOffice["latitude"].toString(),
+  );
+
+  nearestLng = double.parse(
+    nearestOffice["longitude"].toString(),
+  );
+});
+  }
+}
+
+Future<void> openGoogleMap() async {
+  if (nearestLat == null || nearestLng == null) return;
+
+  final Uri url = Uri.parse(
+    "https://www.google.com/maps/dir/?api=1&destination=$nearestLat,$nearestLng",
+  );
+
+  if (await canLaunchUrl(url)) {
+    await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    );
   }
 }
 
@@ -95,14 +182,7 @@ Future<void> loadUser() async {
                 ),
               ),
             ),
-            // UserAccountsDrawerHeader(
-            //   accountName: Text("Abdur Rahman"),
-            //   accountEmail: Text("engrabdurrahman4991@gmail.com"),
-            //   currentAccountPicture: CircleAvatar(
-            //     backgroundColor: Colors.white,
-            //     child: Text("A", style: TextStyle(fontSize: 30)),
-            //   ),
-            // ),
+            
             ListTile(
               title: const Text("Register"),
               leading: const Icon(Icons.app_registration_rounded),
@@ -145,68 +225,81 @@ Future<void> loadUser() async {
       //   child: Text(" Hello "),
       // ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+
+              Card(
+          elevation: 4,
+          child: InkWell(
+            onTap: openGoogleMap,
+            borderRadius: BorderRadius.circular(12),
+            child: ListTile(
+              leading: const Icon(
+                Icons.location_city,
+                color: Colors.blue,
+              ),
+              title: Text(
+                nearestOfficeName.isEmpty
+                    ? "Nearest Office"
+                    : nearestOfficeName,
+              ),
+              subtitle: Text(
+                nearestDistance == 0
+                    ? "Calculating..."
+                    : "${nearestDistance.toStringAsFixed(0)} meters away",
+              ),
+              trailing: const Icon(
+                Icons.directions,
+                color: Colors.green,
+              ),
+            ),
+          ),
+        ),
+
+      const SizedBox(height: 15),
+
+      Expanded(
         child: GridView.count(
           crossAxisCount: 2,
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
           children: [
+
             _homeMenu(
               context,
-              "Location Setting",
+              "New Farm",
               Icons.location_searching,
               '/location-setting',
             ),
+
             _homeMenu(
               context,
-              "Location Setting List",
+              "Farms",
               Icons.map,
               '/location-setting-list',
             ),
+
             _homeMenu(
               context,
-              "Attendance",
+              "Checkin/out",
               Icons.fact_check,
               '/attendance',
             ),
+
             _homeMenu(
               context,
-              "Attendance History",
+              "Checkin History",
               Icons.history,
               '/attendance-history',
             ),
           ],
         ),
       ),
+    ],
+  ),
+),
 
-      
-    //  bottomNavigationBar: BottomNavigationBar(
-    //     currentIndex: _selectedIndex, // keeps track of the selected tab
-    //     onTap: (index) {
-    //       setState(() {
-    //         _selectedIndex = index; // change tab
-    //       });
-    //       if (index == 0) {
-    //       Navigator.pushNamed(context, '/');
-    //       } else if (index == 1) {
-    //         Navigator.pushNamed(context, '/profile');
-    //       }
-    //     },
-    //     items: const [
-    //       BottomNavigationBarItem(
-    //         icon: Icon(Icons.home),
-    //         label: 'Home',
-    //       ),
-    //       BottomNavigationBarItem(
-    //         icon: Icon(Icons.person),
-    //         label: 'Profile',
-    //       ),
-    //       BottomNavigationBarItem(
-    //         icon: Icon(Icons.settings),
-    //         label: 'Settings',
-    //       ),
-    //     ],
-    //   ),
     );
   }
 }

@@ -52,9 +52,9 @@ class _LoginState extends State<Login> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.blue[400]!,
-              Colors.blue[300]!,
-              Colors.blue[100]!,
+              Colors.red[400]!,
+              Colors.red[300]!,
+              Colors.red[100]!,
             ],
           ),
         ),

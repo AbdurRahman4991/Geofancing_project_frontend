@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
-        android:label="geofancing_project"
+        android:label="Contact Farm"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

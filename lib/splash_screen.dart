@@ -137,9 +137,9 @@ Future<void> _checkLogin() async {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.blue.shade400,
-                  Colors.blue.shade300,
-                  Colors.blue.shade100,
+                  Colors.red.shade400,
+                  Colors.red.shade300,
+                  Colors.red.shade100,
                 ],
               ),
             ),
@@ -152,12 +152,12 @@ Future<void> _checkLogin() async {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset(
-                        'assets/images/logo.jpeg',
+                        'assets/images/logopng.png',
                         height: 90,
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        "Employee Tracking",
+                        "",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
