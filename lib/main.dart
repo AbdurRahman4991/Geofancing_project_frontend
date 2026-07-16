@@ -9,6 +9,7 @@ import 'pages/home.dart';
 import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'pages/system_check_page.dart';
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +57,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) =>  Register());
           case '/login':
             return MaterialPageRoute(builder: (_) => Login());
+          case '/syste-configure':
+          return MaterialPageRoute(builder: (_) => const SystemCheckPage());
           case '/location-setting':
             return MaterialPageRoute(builder: (_) => GeofenceMapPage());
           case '/location-setting-list':

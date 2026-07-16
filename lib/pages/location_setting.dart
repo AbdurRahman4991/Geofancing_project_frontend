@@ -6,7 +6,6 @@ import '../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 class GeofenceMapPage extends StatefulWidget {
    final dynamic geofence;
   const GeofenceMapPage({super.key, this.geofence});
@@ -15,14 +14,13 @@ class GeofenceMapPage extends StatefulWidget {
 }
 class _GeofenceMapPageState extends State<GeofenceMapPage> {
   GoogleMapController? mapController;
-
   LatLng? selectedLocation;
   File? selectedImage;
+  String? imageUrl;
   final TextEditingController latController = TextEditingController();
   final TextEditingController lngController = TextEditingController();
   final TextEditingController firmNameController = TextEditingController();
   final TextEditingController radiusController = TextEditingController(text: "100");
-  
 
   @override
   void initState() {
@@ -56,6 +54,8 @@ Future<void> checkAuth() async {
       latController.text = lat.toString();
       lngController.text = lng.toString();
       radiusController.text = data["radius"].toString();
+      firmNameController.text = data["firm_name"] ?? "";
+      imageUrl = data["image_url"];
     });
   } else {
     getCurrentLocation();
@@ -154,13 +154,24 @@ Future<void> takePhoto() async {
                         icon: const Icon(Icons.camera_alt),
                         label: const Text("Take Office Photo"),
                       ),
-                      if(selectedImage != null)
-                        Image.file(
-                          selectedImage!,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                  if (selectedImage != null)
+                    Image.file(
+                      selectedImage!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  else if (imageUrl != null && imageUrl!.isNotEmpty)
+                    Image.network(
+                      imageUrl!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        print(error);
+                        return const Text("Image Load Failed");
+                      },
+                    ),
                       TextField(
                         controller: latController,
                         readOnly: true,
@@ -204,6 +215,7 @@ Future<void> takePhoto() async {
                                 latitude: double.parse(latController.text),
                                 longitude: double.parse(lngController.text),
                                 radius: double.parse(radiusController.text),
+                                image: selectedImage,
                               );
 
                             } else {
@@ -216,6 +228,7 @@ Future<void> takePhoto() async {
                                 latitude: double.parse(latController.text),
                                 longitude: double.parse(lngController.text),
                                 radius: double.parse(radiusController.text),
+                                image: selectedImage,
                               );
 
                             }

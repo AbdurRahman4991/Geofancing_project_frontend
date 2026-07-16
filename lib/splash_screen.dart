@@ -44,33 +44,6 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
     _checkLogin();
   }
-// Future<void> _checkLogin() async {
-//   await Future.delayed(const Duration(seconds: 2));
-
-//   final prefs = await SharedPreferences.getInstance();
-//   final token = prefs.getString('access_token');
-
-//   if (!mounted) return;
-
-//   if (token != null && token.isNotEmpty) {
-    
-//   // Background service start
-//   //await BackgroundLocationService.initializeService();
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => const HomePage(),
-//       ),
-//     );
-//   } else {
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => Login(),
-//       ),
-//     );
-//   }
-// }
 Future<void> _checkLogin() async {
 
   await Future.delayed(

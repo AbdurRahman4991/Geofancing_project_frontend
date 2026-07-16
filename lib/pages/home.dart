@@ -197,6 +197,16 @@ Future<void> openGoogleMap() async {
                 Navigator.pushNamed(context, '/login');
               },
             ),
+
+            ListTile(
+              title: const Text("System Configure"),
+              leading: const Icon(Icons.settings_applications),
+              onTap: () {
+                Navigator.pushNamed(context, '/syste-configure');
+              },
+            ),
+
+
                         
             ListTile(
               title: const Text("Logout"),
