@@ -154,10 +154,6 @@ static Future<void> createNotificationChannel() async {
   }
 
 }
-
-
-
-
   @pragma('vm:entry-point')
   static void onStart(
       ServiceInstance service) async {
@@ -169,37 +165,19 @@ static Future<void> createNotificationChannel() async {
 
   }
 
-
   print("===== BACKGROUND SERVICE STARTED =====");
-
-
 
     final attendanceManager =
         AttendanceManager();
 
-
-
     // Load saved geofence
-
     await attendanceManager
         .loadGeofence();
-
-
-
     bool checkedIn = false;
-
-
-
     service.on("stopService")
         .listen((event) {
-
       service.stopSelf();
-
     });
-
-
-
-
 
     Timer.periodic(
   const Duration(seconds: 300),

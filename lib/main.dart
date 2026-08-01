@@ -10,6 +10,7 @@ import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'pages/system_check_page.dart';
+import 'pages/my_farm_map__view_page.dart'; 
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +62,9 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(builder: (_) => const SystemCheckPage());
           case '/location-setting':
             return MaterialPageRoute(builder: (_) => GeofenceMapPage());
+          case '/myfarm-mapview':            
+            return MaterialPageRoute(builder: (_) => MyFarmMapViewPage(            
+            ));
           case '/location-setting-list':
             return MaterialPageRoute(builder: (_) => LocationSettingList() );
           case '/attendance':                  
@@ -74,5 +78,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

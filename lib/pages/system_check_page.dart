@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -8,26 +7,22 @@ import 'package:geolocator/geolocator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart' as permission;
 import 'package:app_settings/app_settings.dart';
-
 class SystemCheckItem {
   final String title;
   bool status;
   String message;
-
   SystemCheckItem({
     required this.title,
     this.status = false,
     this.message = "",
   });
 }
-
 class SystemCheckPage extends StatefulWidget {
   const SystemCheckPage({super.key});
 
   @override
   State<SystemCheckPage> createState() => _SystemCheckPageState();
 }
-
 class _SystemCheckPageState extends State<SystemCheckPage> {
   bool loading = true;
 
@@ -38,13 +33,10 @@ class _SystemCheckPageState extends State<SystemCheckPage> {
   bool notificationPermission = false;
   bool backgroundServiceRunning = false;
   bool batteryOptimization = false;
-
   String androidVersion = "";
   String appVersion = "";
   String deviceName = "";
-
   List<SystemCheckItem> checks = [];
-
   Future<void> fixGps() async {
   await Geolocator.openLocationSettings();
 }

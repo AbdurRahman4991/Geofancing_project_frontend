@@ -191,6 +191,14 @@ Future<void> openGoogleMap() async {
               },
             ),
             ListTile(
+              title: const Text("Map view"),
+              leading: const Icon(Icons.login),
+              onTap: () {
+                Navigator.pushNamed(context, '/myfarm-mapview');
+              },
+            ),
+
+            ListTile(
               title: const Text("Login"),
               leading: const Icon(Icons.login),
               onTap: () {

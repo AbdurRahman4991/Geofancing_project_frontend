@@ -110,9 +110,9 @@ Future<void> _checkLogin() async {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.red.shade400,
-                  Colors.red.shade300,
-                  Colors.red.shade100,
+                  Colors.blue.shade400,
+                  Colors.blue.shade300,
+                  Colors.blue.shade100,
                 ],
               ),
             ),
