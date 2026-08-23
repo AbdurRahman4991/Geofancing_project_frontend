@@ -188,18 +188,18 @@ class _LoginState extends State<Login> {
                               //   Navigator.pushReplacementNamed(context, '/HomePage()');
                              if (result != null && result.toLowerCase().contains('success')) {
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Login successful!"),
-      backgroundColor: Colors.green,
-    ),
-  );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Login successful!"),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
 
-  await BackgroundLocationService.initializeService();
+                                await BackgroundLocationService.initializeService();
 
-  await Future.delayed(const Duration(seconds: 1));
+                                await Future.delayed(const Duration(seconds: 1));
 
-  Navigator.pushReplacementNamed(context, '/home');
+                                Navigator.pushReplacementNamed(context, '/home');
 
 
                               } else {

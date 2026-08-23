@@ -95,6 +95,7 @@ class _LocationSettingListState extends State<LocationSettingList> {
                         Text("Latitude : ${item["latitude"]}"),
                         Text("Longitude : ${item["longitude"]}"),
                         Text("Radius : ${item["radius"]} m"),
+                        Text("Visited : ${item["checked"]}")
                       ],
                     ),
                   ),
