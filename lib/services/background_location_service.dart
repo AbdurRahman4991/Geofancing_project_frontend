@@ -65,6 +65,7 @@ import '../services/employee_location_service.dart';
 import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/widgets.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 @pragma('vm:entry-point')
 class BackgroundLocationService {
@@ -154,111 +155,139 @@ static Future<void> createNotificationChannel() async {
   }
 
 }
-  @pragma('vm:entry-point')
-  static void onStart(
-      ServiceInstance service) async {
+ @pragma('vm:entry-point')
+static void onStart(ServiceInstance service) async {
 
-    DartPluginRegistrant.ensureInitialized();
-    if (service is AndroidServiceInstance) {
+  DartPluginRegistrant.ensureInitialized();
 
-    service.setAsForegroundService();
+  // ==============================
+  // HIVE
+  // ==============================
 
+  await Hive.initFlutter();
+
+  if (!Hive.isBoxOpen('location_queue')) {
+    await Hive.openBox('location_queue');
   }
+
+  print("Hive location_queue opened");
+
+
+  // ==============================
+  // FOREGROUND SERVICE
+  // ==============================
+
+  if (service is AndroidServiceInstance) {
+    service.setAsForegroundService();
+  }
+
 
   print("===== BACKGROUND SERVICE STARTED =====");
 
-    final attendanceManager =
-        AttendanceManager();
 
-    // Load saved geofence
-    await attendanceManager
-        .loadGeofence();
-    bool checkedIn = false;
-    service.on("stopService")
-        .listen((event) {
-      service.stopSelf();
-    });
+  // ==============================
+  // ATTENDANCE
+  // ==============================
 
-    Timer.periodic(
-  const Duration(seconds: 300),
-  (timer) async {
+  final attendanceManager =
+      AttendanceManager();
 
-    print("===== TIMER RUNNING =====");
+  await attendanceManager.loadGeofence();
 
-    try {
-
-      Position position =
-          await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+  bool checkedIn = false;
 
 
-      print(
-        "LAT: ${position.latitude}"
-      );
+  // ==============================
+  // STOP SERVICE
+  // ==============================
 
-      print(
-        "LNG: ${position.longitude}"
-      );
-
-
-      await EmployeeLocationService.sendLocation(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+  service.on("stopService").listen((event) {
+    service.stopSelf();
+  });
 
 
-      print("Location Sent");
+  // ==============================
+  // TIMER
+  // ==============================
+
+  Timer.periodic(
+    const Duration(seconds: 30),
+    (timer) async {
+
+      print("===== TIMER RUNNING =====");
+
+      try {
+
+        final position =
+            await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+
+        print("LAT: ${position.latitude}");
+        print("LNG: ${position.longitude}");
 
 
+        // ==========================
+        // LOCATION
+        // ==========================
 
-      bool inside =
-          attendanceManager.isInsideOffice(position);
-
-
-      print(
-        "Inside Office: $inside"
-      );
-
-
-      if (inside && !checkedIn) {
-
-        final message =
-            await attendanceManager.checkIn(position);
-
-
-        print(
-          "CHECK IN: $message"
+        await EmployeeLocationService.sendLocation(
+          latitude: position.latitude,
+          longitude: position.longitude,
         );
 
 
+        print("Location Sent");
+
+
+        // ==========================
+        // GEOFENCE
+        // ==========================
+
+        final inside =
+            attendanceManager.isInsideOffice(position);
+
+        print("Inside Office: $inside");
+
+
+        // ==========================
+        // CHECK IN
+        // ==========================
+
+        if (inside && !checkedIn) {
+
+          final message =
+              await attendanceManager.checkIn(position);
+
+          print("CHECK IN: $message");
+
+          checkedIn = true;
+        }
+
+
+        // ==========================
+        // CHECK OUT
+        // ==========================
+
+        if (!inside && checkedIn) {
+
+          final message =
+              await attendanceManager.checkOut(position);
+
+          print("CHECK OUT: $message");
+
+          checkedIn = false;
+        }
+
+      } catch (e, stackTrace) {
+
+        print("BACKGROUND ERROR: $e");
+        print(stackTrace);
+
       }
 
-
-      if (!inside && checkedIn) {
-
-        final message =
-            await attendanceManager.checkOut(position);
-
-
-        print(
-          "CHECK OUT: $message"
-        );
-
-      }
-
-
-    } catch(e){
-
-      print(
-        "BACKGROUND ERROR: $e"
-      );
-
-    }
-
-  },
-);
-
-  }
+    },
+  );
+}
 
 }

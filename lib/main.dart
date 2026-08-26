@@ -11,6 +11,7 @@ import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'pages/system_check_page.dart';
 import 'pages/my_farm_map__view_page.dart'; 
+import 'services/connectivity_service.dart';
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,9 @@ void main() async {
 
   await Hive.initFlutter();
 
+  await Hive.openBox('location_queue');
   await Hive.openBox('attendance_offline');
+  ConnectivityService.start();
 
 
   await BackgroundLocationService.initializeService();
