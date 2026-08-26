@@ -155,7 +155,142 @@ static Future<void> createNotificationChannel() async {
   }
 
 }
- @pragma('vm:entry-point')
+//  @pragma('vm:entry-point')
+// static void onStart(ServiceInstance service) async {
+
+//   DartPluginRegistrant.ensureInitialized();
+
+//   // ==============================
+//   // HIVE
+//   // ==============================
+
+//   await Hive.initFlutter();
+
+//   if (!Hive.isBoxOpen('location_queue')) {
+//     await Hive.openBox('location_queue');
+//   }
+
+//   print("Hive location_queue opened");
+
+
+//   // ==============================
+//   // FOREGROUND SERVICE
+//   // ==============================
+
+//   if (service is AndroidServiceInstance) {
+//     service.setAsForegroundService();
+//   }
+
+
+//   print("===== BACKGROUND SERVICE STARTED =====");
+
+
+//   // ==============================
+//   // ATTENDANCE
+//   // ==============================
+
+//   final attendanceManager =
+//       AttendanceManager();
+
+//   await attendanceManager.loadGeofence();
+
+//   bool checkedIn = false;
+
+
+//   // ==============================
+//   // STOP SERVICE
+//   // ==============================
+
+//   service.on("stopService").listen((event) {
+//     service.stopSelf();
+//   });
+
+
+//   // ==============================
+//   // TIMER
+//   // ==============================
+
+//   Timer.periodic(
+//     const Duration(seconds: 30),
+//     (timer) async {
+
+//       print("===== TIMER RUNNING =====");
+
+//       try {
+
+//         final position =
+//             await Geolocator.getCurrentPosition(
+//           desiredAccuracy: LocationAccuracy.high,
+//         );
+
+//         print("LAT: ${position.latitude}");
+//         print("LNG: ${position.longitude}");
+
+
+//         // ==========================
+//         // LOCATION
+//         // ==========================
+
+//         await EmployeeLocationService.sendLocation(
+//           latitude: position.latitude,
+//           longitude: position.longitude,
+//         );
+
+
+//         print("Location Sent");
+
+
+//         // ==========================
+//         // GEOFENCE
+//         // ==========================
+
+//         final inside =
+//             attendanceManager.isInsideOffice(position);
+
+//         print("Inside Office: $inside");
+
+
+//         // ==========================
+//         // CHECK IN
+//         // ==========================
+
+//         if (inside && !checkedIn) {
+
+//           final message =
+//               await attendanceManager.checkIn(position);
+
+//           print("CHECK IN: $message");
+
+//           checkedIn = true;
+//         }
+
+
+//         // ==========================
+//         // CHECK OUT
+//         // ==========================
+
+//         if (!inside && checkedIn) {
+
+//           final message =
+//               await attendanceManager.checkOut(position);
+
+//           print("CHECK OUT: $message");
+
+//           checkedIn = false;
+//         }
+
+//       } catch (e, stackTrace) {
+
+//         print("BACKGROUND ERROR: $e");
+//         print(stackTrace);
+
+//       }
+
+//     },
+//   );
+// }
+
+@pragma('vm:entry-point')
 static void onStart(ServiceInstance service) async {
 
   DartPluginRegistrant.ensureInitialized();
@@ -180,7 +315,6 @@ static void onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
     service.setAsForegroundService();
   }
-
 
   print("===== BACKGROUND SERVICE STARTED =====");
 
@@ -207,28 +341,35 @@ static void onStart(ServiceInstance service) async {
 
 
   // ==============================
-  // TIMER
+  // LOCATION SETTINGS
   // ==============================
 
-  Timer.periodic(
-    const Duration(seconds: 30),
-    (timer) async {
+  const LocationSettings locationSettings =
+      LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 10,
+  );
 
-      print("===== TIMER RUNNING =====");
+
+  // ==============================
+  // LOCATION STREAM
+  // ==============================
+
+  Geolocator.getPositionStream(
+    locationSettings: locationSettings,
+  ).listen(
+    (Position position) async {
 
       try {
 
-        final position =
-            await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
+        print("===== LOCATION UPDATED =====");
 
         print("LAT: ${position.latitude}");
         print("LNG: ${position.longitude}");
 
 
         // ==========================
-        // LOCATION
+        // SEND LOCATION
         // ==========================
 
         await EmployeeLocationService.sendLocation(
@@ -236,8 +377,7 @@ static void onStart(ServiceInstance service) async {
           longitude: position.longitude,
         );
 
-
-        print("Location Sent");
+        print("Location processing completed");
 
 
         // ==========================
@@ -281,13 +421,17 @@ static void onStart(ServiceInstance service) async {
 
       } catch (e, stackTrace) {
 
-        print("BACKGROUND ERROR: $e");
-        print(stackTrace);
+        print("BACKGROUND LOCATION ERROR: $e");
 
+        print(stackTrace);
       }
+
+    },
+    onError: (error) {
+
+      print("LOCATION STREAM ERROR: $error");
 
     },
   );
 }
-
 }

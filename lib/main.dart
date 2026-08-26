@@ -13,13 +13,7 @@ import 'pages/system_check_page.dart';
 import 'pages/my_farm_map__view_page.dart'; 
 import 'services/connectivity_service.dart';
 
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Hive.initFlutter();
-//   await Hive.openBox('attendance_offline');
-//   // await BackgroundLocationService.initializeService();
-//   runApp(const MyApp());
-// }
+
 void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
