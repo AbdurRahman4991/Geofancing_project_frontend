@@ -201,37 +201,93 @@ Future<void> takePhoto() async {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
-                            final userId = await AuthService.getUserId();
-                            final companyId = await AuthService.getCompanyId();
+                            // final userId = await AuthService.getUserId();
+                            // final companyId = await AuthService.getCompanyId();
 
-                            bool success;
+                            // bool success;
 
-                            if (widget.geofence == null) {
+                            // if (widget.geofence == null) {
 
-                              success = await GeofenceService.createGeofence(
-                                companyId: companyId!,
-                                userId: userId!,
-                                firmName: firmNameController.text.trim(),
-                                latitude: double.parse(latController.text),
-                                longitude: double.parse(lngController.text),
-                                radius: double.parse(radiusController.text),
-                                image: selectedImage,
-                              );
+                            //   success = await GeofenceService.createGeofence(
+                            //     companyId: companyId!,
+                            //     userId: userId!,
+                            //     firmName: firmNameController.text.trim(),
+                            //     latitude: double.parse(latController.text),
+                            //     longitude: double.parse(lngController.text),
+                            //     radius: double.parse(radiusController.text),
+                            //     image: selectedImage,
+                            //   );
 
-                            } else {
+                            // } else {
 
-                              success = await GeofenceService.updateGeofence(
-                                id: geofenceId!,
-                                companyId: companyId!,
-                                userId: userId!,
-                                firmName: firmNameController.text.trim(),
-                                latitude: double.parse(latController.text),
-                                longitude: double.parse(lngController.text),
-                                radius: double.parse(radiusController.text),
-                                image: selectedImage,
-                              );
+                            //   success = await GeofenceService.updateGeofence(
+                            //     id: geofenceId!,
+                            //     companyId: companyId!,
+                            //     userId: userId!,
+                            //     firmName: firmNameController.text.trim(),
+                            //     latitude: double.parse(latController.text),
+                            //     longitude: double.parse(lngController.text),
+                            //     radius: double.parse(radiusController.text),
+                            //     image: selectedImage,
+                            //   );
 
-                            }
+                           // }
+                           final userId = await AuthService.getUserId();
+                              final companyId = await AuthService.getCompanyId();
+
+                              if (userId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("User information not found. Please login again."),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (companyId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Company information not found. Please login again.",
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              bool success;
+
+                              if (widget.geofence == null) {
+                                success = await GeofenceService.createGeofence(
+                                  companyId: companyId,
+                                  userId: userId,
+                                  firmName: firmNameController.text.trim(),
+                                  latitude: double.parse(latController.text),
+                                  longitude: double.parse(lngController.text),
+                                  radius: double.parse(radiusController.text),
+                                  image: selectedImage,
+                                );
+                              } else {
+                                if (geofenceId == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Geofence ID not found."),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                success = await GeofenceService.updateGeofence(
+                                  id: geofenceId!,
+                                  companyId: companyId,
+                                  userId: userId,
+                                  firmName: firmNameController.text.trim(),
+                                  latitude: double.parse(latController.text),
+                                  longitude: double.parse(lngController.text),
+                                  radius: double.parse(radiusController.text),
+                                  image: selectedImage,
+                                );
+                              }
 
                             if(success){
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -1,18 +1,57 @@
+// import 'dart:convert';
+// import 'package:shared_preferences/shared_preferences.dart';
+
+// class AuthService {
+//   static Future<int?> getUserId() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final user = jsonDecode(prefs.getString('user')!);
+
+//     return user['id'];
+//   }
+
+//   static Future<int?> getCompanyId() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final user = jsonDecode(prefs.getString('user')!);
+
+//     return user['employee']['company_id'];
+//   }
+// }
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static Future<int?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    final user = jsonDecode(prefs.getString('user')!);
+
+    final userString = prefs.getString('user');
+
+    if (userString == null || userString.isEmpty) {
+      return null;
+    }
+
+    final user = jsonDecode(userString);
 
     return user['id'];
   }
 
   static Future<int?> getCompanyId() async {
     final prefs = await SharedPreferences.getInstance();
-    final user = jsonDecode(prefs.getString('user')!);
 
-    return user['employee']['company_id'];
+    final userString = prefs.getString('user');
+
+    if (userString == null || userString.isEmpty) {
+      return null;
+    }
+
+    final user = jsonDecode(userString);
+
+    final employee = user['employee'];
+
+    if (employee == null) {
+      return null;
+    }
+
+    return employee['company_id'];
   }
 }
