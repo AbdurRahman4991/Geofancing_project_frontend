@@ -48,60 +48,139 @@ class GeofenceService {
   /// ============================
   /// Create Geofence
   /// ============================
+  // static Future<bool> createGeofence({
+  //   required int companyId,
+  //   required int userId,
+  //   required String firmName,
+  //   required double latitude,
+  //   required double longitude,
+  //   required double radius,
+  //   File? image,
+  // }) async {
+  //   try {
+  //     final headers = await _headers();
+
+  //     var request = http.MultipartRequest(
+  //       "POST",
+  //       Uri.parse("${ApiConfig.baseUrl}/geofences"),
+  //     );
+
+  //     request.headers.addAll(headers);
+
+  //     request.fields["company_id"] = companyId.toString();
+  //     request.fields["user_id"] = userId.toString();
+  //     request.fields["firm_name"] = firmName;
+  //     request.fields["latitude"] = latitude.toString();
+  //     request.fields["longitude"] = longitude.toString();
+  //     //request.fields["radius"] = radius.toString();
+  //     request.fields["radius"] = radius.toInt().toString();
+
+  //     if (image != null) {
+  //       request.files.add(
+  //         await http.MultipartFile.fromPath(
+  //           "image",
+  //           image.path,
+  //         ),
+  //       );
+  //     }
+
+  //     final response = await request.send();
+  //     final body = await response.stream.bytesToString();
+
+  //     print("Status: ${response.statusCode}");
+  //     print(body);
+
+  //     if (response.statusCode == 200 ||
+  //         response.statusCode == 201) {
+  //       await syncGeofences();
+  //       return true;
+  //     }
+
+  //     return false;
+  //   } catch (e) {
+  //     print("Create Error: $e");
+  //     return false;
+  //   }
+  // }
   static Future<bool> createGeofence({
-    required int companyId,
-    required int userId,
-    required String firmName,
-    required double latitude,
-    required double longitude,
-    required double radius,
-    File? image,
-  }) async {
-    try {
-      final headers = await _headers();
+  required int companyId,
+  required int userId,
+  required String firmName,
+  required double latitude,
+  required double longitude,
+  required double radius,
+  File? image,
+}) async {
+  try {
+    final headers = await _headers();
 
-      var request = http.MultipartRequest(
-        "POST",
-        Uri.parse("${ApiConfig.baseUrl}/geofences"),
-      );
+    // Login user থেকে area_id নেওয়া
+    final prefs = await SharedPreferences.getInstance();
+    final userString = prefs.getString('user');
 
-      request.headers.addAll(headers);
-
-      request.fields["company_id"] = companyId.toString();
-      request.fields["user_id"] = userId.toString();
-      request.fields["firm_name"] = firmName;
-      request.fields["latitude"] = latitude.toString();
-      request.fields["longitude"] = longitude.toString();
-      //request.fields["radius"] = radius.toString();
-      request.fields["radius"] = radius.toInt().toString();
-
-      if (image != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            "image",
-            image.path,
-          ),
-        );
-      }
-
-      final response = await request.send();
-      final body = await response.stream.bytesToString();
-
-      print("Status: ${response.statusCode}");
-      print(body);
-
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
-        await syncGeofences();
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      print("Create Error: $e");
+    if (userString == null) {
+      print("User data not found.");
       return false;
     }
+
+    final user = jsonDecode(userString);
+
+    final areaId =
+        user['hierarchy_assignment']?['area_id'];
+
+    if (areaId == null) {
+      print("No area assigned to this user.");
+      return false;
+    }
+
+    print("Logged-in User ID: ${user['id']}");
+    print("Assigned Area ID: $areaId");
+
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("${ApiConfig.baseUrl}/geofences"),
+    );
+
+    request.headers.addAll(headers);
+
+    request.fields["company_id"] = companyId.toString();
+    request.fields["user_id"] = userId.toString();
+
+    // Login user's assigned area
+    request.fields["area_id"] = areaId.toString();
+
+    request.fields["firm_name"] = firmName;
+    request.fields["latitude"] = latitude.toString();
+    request.fields["longitude"] = longitude.toString();
+    request.fields["radius"] = radius.toInt().toString();
+
+    if (image != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          "image",
+          image.path,
+        ),
+      );
+    }
+
+    final response = await request.send();
+    final body = await response.stream.bytesToString();
+
+    print("Status: ${response.statusCode}");
+    print(body);
+
+    if (response.statusCode == 200 ||
+        response.statusCode == 201) {
+      await syncGeofences();
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    print("Create Error: $e");
+    return false;
   }
+}
 
   /// ============================
   /// Update Geofence
