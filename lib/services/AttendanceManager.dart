@@ -14,7 +14,6 @@ class AttendanceManager {
   /// Getter
   List<dynamic> get geofencingList => _geofencingList;
 
-  /// Geofence আছে কিনা
   bool get hasGeofence => _geofencingList.isNotEmpty;
 
   /// Load geofence from SharedPreferences
