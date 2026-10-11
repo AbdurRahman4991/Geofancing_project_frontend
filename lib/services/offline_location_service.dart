@@ -16,26 +16,26 @@ class EmployeeLocationService {
   static Future<void> sendLocation({
     required double latitude,
     required double longitude,
+    String? activityType,
+    String? transportMode,
+    double? speed,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
       final token = prefs.getString('access_token');
-      final userJson = prefs.getString('user');
-
-      if (token == null || userJson == null) {
+      if (token == null) {
         print('User not logged in');
         return;
       }
 
-      final user = jsonDecode(userJson);
-      final employeeId = user['employee']['id'];
 
       final locationData = {
-        'employee_id': employeeId,
         'latitude': latitude,
         'longitude': longitude,
-        'captured_at': DateTime.now().toUtc().toIso8601String(),
+        'activity_type': activityType,
+        'transport_mode': transportMode,
+        'speed': speed,
       };
 
       final connectivity = await Connectivity().checkConnectivity();
@@ -99,10 +99,11 @@ class EmployeeLocationService {
       };
 
       final body = {
-        'employee_id': locationData['employee_id'],
         'latitude': locationData['latitude'],
         'longitude': locationData['longitude'],
-        'captured_at': locationData['captured_at'],
+        'activity_type': locationData['activity_type'],
+        'transport_mode': locationData['transport_mode'],
+        'speed': locationData['speed'],
       };
 
       final response = await http

@@ -375,6 +375,7 @@ static void onStart(ServiceInstance service) async {
         await EmployeeLocationService.sendLocation(
           latitude: position.latitude,
           longitude: position.longitude,
+          speed: position.speed >= 0 ? position.speed : null,
         );
 
         print("Location processing completed");
