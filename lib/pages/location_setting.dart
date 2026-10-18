@@ -200,38 +200,7 @@ Future<void> takePhoto() async {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            // final userId = await AuthService.getUserId();
-                            // final companyId = await AuthService.getCompanyId();
-
-                            // bool success;
-
-                            // if (widget.geofence == null) {
-
-                            //   success = await GeofenceService.createGeofence(
-                            //     companyId: companyId!,
-                            //     userId: userId!,
-                            //     firmName: firmNameController.text.trim(),
-                            //     latitude: double.parse(latController.text),
-                            //     longitude: double.parse(lngController.text),
-                            //     radius: double.parse(radiusController.text),
-                            //     image: selectedImage,
-                            //   );
-
-                            // } else {
-
-                            //   success = await GeofenceService.updateGeofence(
-                            //     id: geofenceId!,
-                            //     companyId: companyId!,
-                            //     userId: userId!,
-                            //     firmName: firmNameController.text.trim(),
-                            //     latitude: double.parse(latController.text),
-                            //     longitude: double.parse(lngController.text),
-                            //     radius: double.parse(radiusController.text),
-                            //     image: selectedImage,
-                            //   );
-
-                           // }
+                          onPressed: () async {                                                   
                            final userId = await AuthService.getUserId();
                               final companyId = await AuthService.getCompanyId();
 
@@ -255,10 +224,10 @@ Future<void> takePhoto() async {
                                 return;
                               }
 
-                              bool success;
+                              String? errorMessage;
 
                               if (widget.geofence == null) {
-                                success = await GeofenceService.createGeofence(
+                                errorMessage = await GeofenceService.createGeofence(
                                   companyId: companyId,
                                   userId: userId,
                                   firmName: firmNameController.text.trim(),
@@ -277,7 +246,7 @@ Future<void> takePhoto() async {
                                   return;
                                 }
 
-                                success = await GeofenceService.updateGeofence(
+                                errorMessage = await GeofenceService.updateGeofence(
                                   id: geofenceId!,
                                   companyId: companyId,
                                   userId: userId,
@@ -289,7 +258,7 @@ Future<void> takePhoto() async {
                                 );
                               }
 
-                            if(success){
+                            if(errorMessage == null){
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -305,8 +274,8 @@ Future<void> takePhoto() async {
                             }else{
 
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Operation Failed"),
+                                  SnackBar(
+                                  content: Text(errorMessage),
                                 ),
                               );
                             }

@@ -10,9 +10,6 @@ import '../plugins/api_config.dart';
 class EmployeeLocationService {
   static const String boxName = 'location_queue';
 
-  /// Main method
-  /// Internet থাকলে সরাসরি API-তে পাঠাবে।
-  /// Internet না থাকলে Hive-এ save করবে।
   static Future<void> sendLocation({
     required double latitude,
     required double longitude,
@@ -155,9 +152,7 @@ class EmployeeLocationService {
           print('Offline location synced: $key');
         } else {
           print('Sync failed. Keeping location: $key');
-
-          // Network/server problem হলে পরের location-এ না গিয়ে
-          // এখানেই stop করা ভালো।
+          
           break;
         }
       }
