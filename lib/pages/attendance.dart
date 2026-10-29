@@ -344,8 +344,9 @@ class _AttendancePageState extends State<AttendancePage> {
   Future<void> _checkIn() async {
 
 
-    if (currentPosition == null)
+    if (currentPosition == null) {
       return;
+    }
 
 
 
@@ -400,8 +401,9 @@ class _AttendancePageState extends State<AttendancePage> {
   Future<void> _checkOut() async {
 
 
-    if (currentPosition == null)
+    if (currentPosition == null) {
       return;
+    }
 
 
 

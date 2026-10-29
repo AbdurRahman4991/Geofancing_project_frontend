@@ -134,12 +134,8 @@ Future<void> openAppSettingsPage() async {
     try {
     final result = await Connectivity().checkConnectivity();
 
-    if (result is List<ConnectivityResult>) {
-      internet = result.any((e) => e != ConnectivityResult.none);
-    } else {
-      internet = result != ConnectivityResult.none;
-    }
-  } catch (e) {
+    internet = result.any((e) => e != ConnectivityResult.none);
+    } catch (e) {
     internet = false;
   }
   }

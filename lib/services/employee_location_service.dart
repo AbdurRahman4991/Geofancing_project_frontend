@@ -9,6 +9,8 @@ import '../plugins/api_config.dart';
 
 class EmployeeLocationService {
   static const String boxName = 'location_queue';
+  static const int batchSize = 10;
+  static bool _syncing = false;
 
   // ============================================================
   // SEND LOCATION
@@ -17,9 +19,11 @@ class EmployeeLocationService {
   static Future<void> sendLocation({
     required double latitude,
     required double longitude,
+    required double accuracy,
     String? activityType,
     String? transportMode,
     double? speed,
+    DateTime? recordAt,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -43,47 +47,19 @@ class EmployeeLocationService {
       final locationData = {
         'latitude': latitude,
         'longitude': longitude,
+        'accuracy': accuracy,
         'activity_type': activityType,
         'transport_mode': transportMode,
         'speed': speed,
+        'recorded_at': (recordAt ?? DateTime.now().toUtc()).toIso8601String(),
       };
 
       // ============================================================
       // NO INTERNET → SAVE TO HIVE
       // ============================================================
 
-      if (!hasInternet) {
-        await _saveOffline(locationData);
-
-        print('================================');
-        print('NO INTERNET');
-        print('Location saved offline');
-        print('Latitude: $latitude');
-        print('Longitude: $longitude');
-        print('================================');
-
-        return;
-      }
-
-      // ============================================================
-      // INTERNET AVAILABLE → SEND TO API
-      // ============================================================
-
-      final success = await _sendToServer(
-        locationData: locationData,
-        token: token,
-      );
-
-      // API failed → save to Hive
-      if (!success) {
-        await _saveOffline(locationData);
-
-        print('API failed.');
-        print('Location saved offline.');
-      } else {
-        print('Location successfully sent to server.');
-
-        // Existing offline locations sync
+      await _saveOffline(locationData);
+      if (hasInternet && Hive.box(boxName).length >= batchSize) {
         await syncOfflineLocations(token);
       }
     } catch (e, stackTrace) {
@@ -111,16 +87,16 @@ class EmployeeLocationService {
   }
 
   // ============================================================
-  // SEND SINGLE LOCATION TO SERVER
+  // SEND A LOCATION BATCH TO SERVER
   // ============================================================
 
-  static Future<bool> _sendToServer({
-    required Map<String, dynamic> locationData,
+  static Future<bool> _sendBatchToServer({
+    required List<Map<String, dynamic>> locations,
     required String token,
   }) async {
     try {
       final url = Uri.parse(
-        '${ApiConfig.baseUrl}/employee-locations',
+        '${ApiConfig.baseUrl}/employee-locations/batch',
       );
 
       final headers = {
@@ -130,15 +106,9 @@ class EmployeeLocationService {
         'Authorization': 'Bearer $token',
       };
 
-      final body = {
-        'latitude': locationData['latitude'],
-        'longitude': locationData['longitude'],
-        'activity_type': locationData['activity_type'],
-        'transport_mode': locationData['transport_mode'],
-        'speed': locationData['speed'],
-      };
+      final body = {'locations': locations};
 
-      print('========== LOCATION API ==========');
+      print('========== LOCATION BATCH API ==========');
       print('URL: $url');
       print('Body: ${jsonEncode(body)}');
       print('==================================');
@@ -159,7 +129,7 @@ class EmployeeLocationService {
       return response.statusCode >= 200 &&
           response.statusCode < 300;
     } catch (e) {
-      print('Send location error: $e');
+      print('Send location batch error: $e');
 
       return false;
     }
@@ -172,6 +142,8 @@ class EmployeeLocationService {
   static Future<void> syncOfflineLocations(
     String token,
   ) async {
+    if (_syncing) return;
+    _syncing = true;
     try {
       final box = Hive.box(boxName);
 
@@ -185,52 +157,50 @@ class EmployeeLocationService {
       print('Total: ${box.length}');
       print('================================');
 
-      // Copy keys because we will delete records
       final keys = box.keys.toList();
-
-      for (final key in keys) {
-        try {
+      for (var offset = 0; offset < keys.length; offset += batchSize) {
+        final batchKeys = keys.skip(offset).take(batchSize).toList();
+        final locations = <Map<String, dynamic>>[];
+        for (final key in batchKeys) {
           final storedData = box.get(key);
-
-          if (storedData == null) {
-            continue;
+          if (storedData != null) {
+            final item = Map<String, dynamic>.from(storedData);
+            final recordedAt = item['recorded_at'] ??
+                item['record_at'] ??
+                DateTime.now().toUtc().toIso8601String();
+            item['recorded_at'] = recordedAt;
+            await box.put(key, item);
+            locations.add({
+              'latitude': item['latitude'],
+              'longitude': item['longitude'],
+              'accuracy': item['accuracy'],
+              'activity_type': item['activity_type'],
+              'transport_mode': item['transport_mode'],
+              'speed': item['speed'],
+              'recorded_at': recordedAt,
+            });
           }
+        }
+        if (locations.isEmpty) continue;
 
-          final locationData =
-              Map<String, dynamic>.from(storedData);
-
-          print('Sending offline location: $key');
-
-          final success = await _sendToServer(
-            locationData: locationData,
-            token: token,
-          );
-
-          if (success) {
-            // API success → remove from Hive
-            await box.delete(key);
-
-            print(
-              'Offline location synced successfully: $key',
-            );
-          } else {
-            print(
-              'Failed to sync: $key',
-            );
-
-            // Network/server problem হলে stop করব
-            break;
-          }
-        } catch (e) {
-          print('Error syncing location $key: $e');
+        final success = await _sendBatchToServer(
+          locations: locations,
+          token: token,
+        );
+        if (!success) {
+          print('Batch failed; keeping ${batchKeys.length} queued locations.');
           break;
         }
+        await box.deleteAll(batchKeys);
+        print('Synced batch of ${batchKeys.length} locations.');
       }
 
       print('Remaining offline locations: ${box.length}');
     } catch (e, stackTrace) {
       print('Offline sync error: $e');
       print(stackTrace);
+    } finally {
+      _syncing = false;
     }
   }
 

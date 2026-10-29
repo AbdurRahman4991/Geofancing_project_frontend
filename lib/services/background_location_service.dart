@@ -9,6 +9,7 @@ import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 class BackgroundLocationService {
@@ -114,7 +115,20 @@ static void onStart(ServiceInstance service) async {
     await Hive.openBox('location_queue');
   }
 
+  // Clear locations stored with the previous payload schema once.
+  final prefs = await SharedPreferences.getInstance();
+  const queueMigrationKey = 'location_queue_recorded_at_migration_v1';
+  if (!(prefs.getBool(queueMigrationKey) ?? false)) {
+    await Hive.box('location_queue').clear();
+    await prefs.setBool(queueMigrationKey, true);
+    print('Cleared old location queue for recorded_at payload migration.');
+  }
+
   print("Hive location_queue opened");
+
+  Timer.periodic(const Duration(seconds: 30), (_) {
+    EmployeeLocationService.syncIfInternetAvailable();
+  });
 
 
   // ==============================
@@ -179,7 +193,9 @@ static void onStart(ServiceInstance service) async {
       try {
 
         // Ignore fixes that are too imprecise to be useful for route tracking.
-        if (!position.accuracy.isFinite || position.accuracy > 50) {
+        if (!position.accuracy.isFinite ||
+            position.accuracy < 0 ||
+            position.accuracy > 50) {
           print("Skipping inaccurate location: ${position.accuracy}m");
           return;
         }
@@ -197,7 +213,9 @@ static void onStart(ServiceInstance service) async {
         await EmployeeLocationService.sendLocation(
           latitude: position.latitude,
           longitude: position.longitude,
+          accuracy: position.accuracy,
           speed: position.speed >= 0 ? position.speed : null,
+          recordAt: position.timestamp.toUtc(),
         );
 
         print("Location processing completed");

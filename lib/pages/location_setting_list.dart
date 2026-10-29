@@ -99,10 +99,12 @@ class _LocationSettingListState extends State<LocationSettingList> {
                         itemCount: _locations.length + (_hasMore || _isLoading || _hasError ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _locations.length) {
-                            if (_hasError) return Center(child: TextButton(
+                            if (_hasError) {
+                              return Center(child: TextButton(
                               onPressed: () => _loadPage(_currentPage + 1),
                               child: const Text('Could not load more. Tap to retry'),
                             ));
+                            }
                             return const Padding(
                               padding: EdgeInsets.all(16),
                               child: Center(child: CircularProgressIndicator()),

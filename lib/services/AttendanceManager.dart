@@ -36,7 +36,7 @@ class AttendanceManager {
     if (!online) return;
 
     final data =
-        await OfflineAttendanceService.getPendingAttendance();
+        OfflineAttendanceService.getPendingAttendance();
 
     if (data == null) return;
 
