@@ -6,6 +6,8 @@ import 'pages/attendance.dart';
 import 'pages/location_setting.dart';
 import 'services/background_location_service.dart';
 import 'pages/home.dart';
+import 'pages/order_pages.dart';
+import 'pages/create_order_page.dart';
 import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -68,6 +70,10 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const AttendancePage());
           case '/attendance-history':
             return MaterialPageRoute(builder: (_) => AttendanceHistory());
+          case '/order-list':
+            return MaterialPageRoute(builder: (_) => const OrderListPage());
+          case '/order-create':
+            return MaterialPageRoute(builder: (_) => const CreateOrderPage());
           default:
             return MaterialPageRoute(builder: (_) => const HomePage());
         }
@@ -75,3 +81,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

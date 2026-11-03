@@ -311,6 +311,20 @@ Future<void> openGoogleMap() async {
               Icons.history,
               '/attendance-history',
             ),
+
+            _homeMenu(
+              context,
+              "Order List",
+              Icons.receipt_long,
+              '/order-list',
+            ),
+
+            _homeMenu(
+              context,
+              "Create Order",
+              Icons.add_shopping_cart,
+              '/order-create',
+            ),
           ],
         ),
       ),
@@ -321,3 +335,4 @@ Future<void> openGoogleMap() async {
     );
   }
 }
+
