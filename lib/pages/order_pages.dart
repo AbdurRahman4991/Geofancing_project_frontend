@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/order_service.dart';
+import 'edit_order_page.dart';
 
 class OrderListPage extends StatefulWidget {
   const OrderListPage({super.key});
@@ -79,6 +80,35 @@ class _OrderListPageState extends State<OrderListPage> {
     if (created == true) _loadOrders(refresh: true);
   }
 
+  Future<void> _openEditOrder(Map<String, dynamic> order) async {
+    final debugItems = _itemsFor(order).map((item) {
+      final product = item['product'];
+      return {
+        'product_id': item['product_id'] ?? (product is Map ? product['id'] : null),
+        'product_name': item['product_name'] ??
+            (product is Map ? product['product_name'] : null),
+        'quantity': item['quantity'] ?? item['qty'] ??
+            (item['pivot'] is Map ? item['pivot']['quantity'] : null),
+      };
+    }).toList();
+    debugPrint('[Order Edit] Clicked: id=${order['id']}, '
+        'order_number=${order['order_number']}, '
+        'geofence_id=${order['geofence_id'] ?? (order['geofence'] is Map ? order['geofence']['id'] : null)}, '
+        'status=${order['status']}');
+    debugPrint('[Order Edit] Items: $debugItems');
+    final orderId = int.tryParse(order['id']?.toString() ?? '');
+    if (orderId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot edit this order: order ID is missing.')),
+      );
+      return;
+    }
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => EditOrderPage(order: order)),
+    );
+    if (updated == true) _loadOrders(refresh: true);
+  }
   List<Map<String, dynamic>> _itemsFor(Map<String, dynamic> order) {
     final rawItems = order['items'] ?? order['order_items'] ?? order['products'];
     if (rawItems is! List) return [];
@@ -125,7 +155,7 @@ class _OrderListPageState extends State<OrderListPage> {
     return lineTotals.fold<num>(0, (sum, value) => sum + value!);
   }
 
-  String _money(num? value) => value == null ? '�' : value.toStringAsFixed(2);
+  String _money(num? value) => value == null ? 'Ã¯Â¿Â½' : value.toStringAsFixed(2);
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final items = _itemsFor(order);
@@ -151,9 +181,18 @@ class _OrderListPageState extends State<OrderListPage> {
               ),
               title: Text(orderNumber),
               subtitle: Text('$customer${createdAt.isEmpty ? '' : '\n$createdAt'}'),
-              trailing: order['status'] == null
-                  ? null
-                  : Chip(label: Text(order['status'].toString())),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (order['status'] != null)
+                    Chip(label: Text(order['status'].toString())),
+                  IconButton(
+                    tooltip: 'Edit order',
+                    onPressed: () => _openEditOrder(order),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                ],
+              ),
             ),
             const Divider(),
             if (items.isEmpty)
@@ -176,7 +215,7 @@ class _OrderListPageState extends State<OrderListPage> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'Qty: ${item['quantity'] ?? '�'}  �  Unit price: ${_money(_unitPrice(item))}  �  Total: ${_money(_lineTotal(item))}',
+                        'Qty: ${item['quantity'] ?? 'Ã¯Â¿Â½'}  Ã¯Â¿Â½  Unit price: ${_money(_unitPrice(item))}  Ã¯Â¿Â½  Total: ${_money(_lineTotal(item))}',
                       ),
                     ],
                   ),

@@ -8,6 +8,7 @@ import 'services/background_location_service.dart';
 import 'pages/home.dart';
 import 'pages/order_pages.dart';
 import 'pages/create_order_page.dart';
+import 'pages/catalog_page.dart';
 import 'pages/location_setting_list.dart';
 import 'splash_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -74,6 +75,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const OrderListPage());
           case '/order-create':
             return MaterialPageRoute(builder: (_) => const CreateOrderPage());
+          case '/catalog':
+            return MaterialPageRoute(builder: (_) => const CatalogPage());
           default:
             return MaterialPageRoute(builder: (_) => const HomePage());
         }
@@ -81,4 +84,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

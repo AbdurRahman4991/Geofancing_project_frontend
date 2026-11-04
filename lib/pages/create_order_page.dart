@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/location_setting_list_service.dart';
 import '../services/product_service.dart';
-import '../services/order_service.dart';
+import '../services/create_order_service.dart';
+import '../widgets/customer_selector.dart';
+import '../widgets/product_selector.dart';
 
 const _ordersKey = 'local_orders';
 
@@ -160,7 +161,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
       final now = DateTime.now();
       final orderNumber = 'ORD-${now.year}-${now.millisecondsSinceEpoch}';
       final notes = _notesController.text.trim();
-      final response = await OrderService.createOrder(
+      final response = await CreateOrderService.createOrder(
         orderNumber: orderNumber,
         geofenceId: int.parse(selectedGeofence['id'].toString()),
         status: 'pending',
@@ -223,176 +224,50 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            DropdownButtonFormField2<String>(
-              value: _selectedGeofenceKey,
-              isExpanded: true,
-              decoration: _decoration('Customer / Geofence', Icons.person_outline),
-              hint: Text(_loadingGeofences
-                  ? 'Loading geofence list...'
-                  : _geofenceError ??
-                      (_geofences.isEmpty ? 'No geofences found' : 'Select a geofence')),
-              items: [
-                for (var index = 0; index < _geofences.length; index++)
-                  DropdownMenuItem(
-                    value: _geofenceKey(index),
-                    child: Text(_geofenceName(_geofences[index])),
-                  ),
-              ],
-              onChanged: _loadingGeofences || _geofences.isEmpty
-                  ? null
-                  : (value) => setState(() => _selectedGeofenceKey = value),
-              validator: (value) => value == null ? 'Select a customer geofence' : null,
-              dropdownStyleData: const DropdownStyleData(maxHeight: 320),
-              dropdownSearchData: DropdownSearchData<String>(
-                searchController: _geofenceSearchController,
-                searchInnerWidgetHeight: 64,
-                searchInnerWidget: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: TextField(
-                    controller: _geofenceSearchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Search customer...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                searchMatchFn: (item, searchValue) {
-                  final geofence = _geofences.firstWhere(
-                    (entry) =>
-                        _geofenceKey(_geofences.indexOf(entry)) == item.value,
-                  );
-                  return _geofenceName(geofence)
-                      .toLowerCase()
-                      .contains(searchValue.toLowerCase());
-                },
-              ),
-              onMenuStateChange: (isOpen) {
-                if (!isOpen) _geofenceSearchController.clear();
+            CustomerSelector(
+              geofences: _geofences,
+              selectedKey: _selectedGeofenceKey,
+              loading: _loadingGeofences,
+              error: _geofenceError,
+              searchController: _geofenceSearchController,
+              keyFor: _geofenceKey,
+              nameFor: _geofenceName,
+              onChanged: (value) => setState(() => _selectedGeofenceKey = value),
+              onRetry: () {
+                setState(() {
+                  _loadingGeofences = true;
+                  _geofenceError = null;
+                });
+                _loadGeofences();
               },
             ),
-            if (_geofenceError != null) ...[
-              const SizedBox(height: 6),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _loadingGeofences = true;
-                    _geofenceError = null;
-                  });
-                  _loadGeofences();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry loading geofences'),
-              ),
-            ],
             const SizedBox(height: 14),
-            FormField<Set<String>>(
-              validator: (_) => _selectedProductKeys.isEmpty
-                  ? 'Select at least one product'
-                  : null,
-              builder: (field) => InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Products',
-                  prefixIcon: const Icon(Icons.inventory_2_outlined),
-                  border: const OutlineInputBorder(),
-                  errorText: field.errorText,
-                ),
-                child: _loadingProducts
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    : _products.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Text(_productError ?? 'No products found'),
-                          )
-                        : Column(
-                            children: [
-                              for (var index = 0; index < _products.length; index++) ...[
-                                CheckboxListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  controlAffinity: ListTileControlAffinity.leading,
-                                  title: Text(_productLabel(_products[index])),
-                                  subtitle: Text(
-                                    (_products[index]['category']?['name'] ?? '').toString(),
-                                  ),
-                                  value: _selectedProductKeys.contains(_productKey(index)),
-                                  onChanged: (checked) {
-                                    setState(() {
-                                      if (checked == true) {
-                                        _selectedProductKeys.add(_productKey(index));
-                                      } else {
-                                        _selectedProductKeys.remove(_productKey(index));
-                                      }
-                                    });
-                                    field.didChange(Set<String>.from(_selectedProductKeys));
-                                  },
-                                ),
-                                if (_selectedProductKeys.contains(_productKey(index)))
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 56, right: 12, bottom: 12),
-                                    child: TextFormField(
-                                      controller: _productQuantityControllers[_productKey(index)],
-                                      decoration: InputDecoration(
-                                        labelText: 'Quantity',
-                                        border: const OutlineInputBorder(),
-                                        suffixIcon: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              tooltip: 'Decrease quantity',
-                                              onPressed: () => _adjustQuantity(
-                                                _productKey(index),
-                                                -1,
-                                              ),
-                                              icon: const Icon(Icons.remove),
-                                            ),
-                                            IconButton(
-                                              tooltip: 'Increase quantity',
-                                              onPressed: () => _adjustQuantity(
-                                                _productKey(index),
-                                                1,
-                                              ),
-                                              icon: const Icon(Icons.add),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                      validator: (value) {
-                                        if (!_selectedProductKeys.contains(_productKey(index))) {
-                                          return null;
-                                        }
-                                        final quantity = int.tryParse(value?.trim() ?? '');
-                                        return quantity == null || quantity < 1
-                                            ? 'Enter a quantity greater than zero'
-                                            : null;
-                                      },
-                                    ),
-                                  ),
-                              ],
-                            ],
-                          ),
-              ),
+            ProductSelector(
+              products: _products,
+              selectedKeys: _selectedProductKeys,
+              quantityControllers: _productQuantityControllers,
+              loading: _loadingProducts,
+              error: _productError,
+              keyFor: _productKey,
+              labelFor: _productLabel,
+              onToggle: (index, selected) => setState(() {
+                final key = _productKey(index);
+                if (selected) {
+                  _selectedProductKeys.add(key);
+                } else {
+                  _selectedProductKeys.remove(key);
+                }
+              }),
+              onAdjustQuantity: _adjustQuantity,
+              onRetry: () {
+                setState(() {
+                  _loadingProducts = true;
+                  _productError = null;
+                });
+                _loadProducts();
+              },
             ),
-            if (_productError != null) ...[
-              const SizedBox(height: 6),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _loadingProducts = true;
-                    _productError = null;
-                  });
-                  _loadProducts();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry loading products'),
-              ),
-            ],
             const SizedBox(height: 14),
-
             TextFormField(
               controller: _notesController,
               decoration: _decoration('Notes (optional)', Icons.notes),
@@ -417,21 +292,3 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

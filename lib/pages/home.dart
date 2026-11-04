@@ -325,6 +325,12 @@ Future<void> openGoogleMap() async {
               Icons.add_shopping_cart,
               '/order-create',
             ),
+            _homeMenu(
+              context,
+              "Catalog",
+              Icons.inventory_2_outlined,
+              '/catalog',
+            ),
           ],
         ),
       ),
@@ -335,4 +341,3 @@ Future<void> openGoogleMap() async {
     );
   }
 }
-
