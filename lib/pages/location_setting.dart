@@ -593,37 +593,37 @@ Future<void> loadHierarchyNodes() async {
                             // HIERARCHY NODE ID
 
                           DropdownButtonFormField<int>(
-  value: hierarchyNodes.any(
-    (node) =>
-        int.tryParse(node['id'].toString()) ==
-        selectedHierarchyNodeId,
-  )
-      ? selectedHierarchyNodeId
-      : null,
+                            value: hierarchyNodes.any(
+                              (node) =>
+                                  int.tryParse(node['id'].toString()) ==
+                                  selectedHierarchyNodeId,
+                            )
+                                ? selectedHierarchyNodeId
+                                : null,
 
-  isExpanded: true,
+                            isExpanded: true,
 
-  decoration: const InputDecoration(
-    labelText: 'Select Hierarchy Node',
-    prefixIcon: Icon(Icons.account_tree),
-    border: OutlineInputBorder(),
-  ),
+                            decoration: const InputDecoration(
+                              labelText: 'Select Hierarchy Node',
+                              prefixIcon: Icon(Icons.account_tree),
+                              border: OutlineInputBorder(),
+                            ),
 
-  hint: const Text('Select Hierarchy Node'),
+                            hint: const Text('Select Hierarchy Node'),
 
-  items: hierarchyNodes.map((node) {
-    return DropdownMenuItem<int>(
-      value: int.parse(node['id'].toString()),
-      child: Text(node['name'].toString()),
-    );
-  }).toList(),
+                            items: hierarchyNodes.map((node) {
+                              return DropdownMenuItem<int>(
+                                value: int.parse(node['id'].toString()),
+                                child: Text(node['name'].toString()),
+                              );
+                            }).toList(),
 
-  onChanged: (value) {
-    setState(() {
-      selectedHierarchyNodeId = value;
-    });
-  },
-),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedHierarchyNodeId = value;
+                              });
+                            },
+                          ),
 
                             const SizedBox(height: 12),
 
