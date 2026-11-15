@@ -24,8 +24,9 @@ void main() async {
 
   await Hive.initFlutter();
 
-  await Hive.openBox('location_queue');
+ // await Hive.openBox('location_queue');
   await Hive.openBox('attendance_offline');
+
   ConnectivityService.start();
 
 
