@@ -70,8 +70,8 @@ Future<void> _checkLogin() async {
 
 
     // Background service start
-    await BackgroundLocationService
-        .initializeService();
+    // await BackgroundLocationService
+    //     .initializeService();
 
 
     Navigator.pushReplacement(

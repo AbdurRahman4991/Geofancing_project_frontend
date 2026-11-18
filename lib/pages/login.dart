@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/services/login_service_api.dart';
 import '/helpers/device_helper.dart';
 import '/helpers/location_helper.dart';
 import '../services/background_location_service.dart';
+import '../pages/forgot_password_page.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -36,6 +38,7 @@ class _LoginState extends State<Login> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
 
   @override
   void initState() {
@@ -43,6 +46,19 @@ class _LoginState extends State<Login> {
 
     _loadDeviceInfo();
     _getCurrentLocation();
+    _loadRememberedLogin();
+  }
+
+  Future<void> _loadRememberedLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool('remember_me') ?? false;
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = rememberMe;
+      if (rememberMe) {
+        _emailController.text = prefs.getString('remembered_email') ?? '';
+      }
+    });
   }
 
   // Get Device ID
@@ -111,6 +127,18 @@ class _LoginState extends State<Login> {
 
       if (result != null &&
           result.toLowerCase().contains('success')) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('remember_me', _rememberMe);
+        if (_rememberMe) {
+          await prefs.setString(
+            'remembered_email',
+            _emailController.text.trim(),
+          );
+        } else {
+          await prefs.remove('remembered_email');
+        }
+
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Login successful!"),
@@ -306,27 +334,79 @@ class _LoginState extends State<Login> {
                         },
                       ),
 
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: const Text('Remember me'),
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
+                      ),
+
+                      // const SizedBox(height: 30),
+
+                      // // =========================
+                      // // Login Button
+                      // // =========================
+                      // _isLoading
+                      //     ? const CircularProgressIndicator()
+                      //     : ElevatedButton(
+                      //         style:
+                      //             ElevatedButton.styleFrom(
+                      //           minimumSize:
+                      //               const Size(200, 60),
+                      //         ),
+                      //         onPressed: _login,
+                      //         child: const Text(
+                      //           "Login",
+                      //           style: TextStyle(
+                      //             fontSize: 18,
+                      //           ),
+                      //         ),
+                      //       ),
+
+                      // const SizedBox(height: 20),
                       const SizedBox(height: 30),
 
-                      // =========================
                       // Login Button
-                      // =========================
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
-                              style:
-                                  ElevatedButton.styleFrom(
-                                minimumSize:
-                                    const Size(200, 60),
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(200, 60),
                               ),
                               onPressed: _login,
                               child: const Text(
                                 "Login",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                ),
+                                style: TextStyle(fontSize: 18),
                               ),
                             ),
+
+                      const SizedBox(height: 10),
+
+                      // Forgot Password Button
+                      TextButton(
+                        onPressed: () {
+                          // Forgot Password page navigation
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordPage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Forgot Password?",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
 
                       const SizedBox(height: 20),
 

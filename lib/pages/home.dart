@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/notification_service.dart';
+import '../widgets/notification_widget.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
@@ -22,6 +24,7 @@ void initState() {
   super.initState();
   loadUser();
   loadNearestOffice();
+  loadNotifications();
 
 }
 
@@ -122,6 +125,222 @@ Future<void> openGoogleMap() async {
   }
 }
 
+int notificationCount = 0;
+
+bool isLoadingNotifications = false;
+
+List<dynamic> notifications = [];
+
+Future<void> loadNotifications() async {
+  try {
+    final response =
+        await NotificationService.getNotifications();
+
+    if (!mounted) return;
+
+    setState(() {
+      notificationCount =
+          int.tryParse(
+            response['unread_count']?.toString() ?? '0',
+          ) ?? 0;
+
+      notifications =
+          response['data'] is List
+              ? response['data'] as List<dynamic>
+              : response['data']?['data'] ?? [];
+    });
+  } catch (e) {
+    debugPrint('Notification Error: $e');
+  }
+}
+
+Future<void> showNotifications() async {
+  setState(() {
+    isLoadingNotifications = true;
+  });
+
+  try {
+    final response =
+        await NotificationService.getNotifications();
+
+    if (!mounted) return;
+
+    setState(() {
+      notificationCount =
+          int.tryParse(
+            response['unread_count']?.toString() ?? '0',
+          ) ?? 0;
+
+      notifications =
+          response['data'] is List
+              ? response['data'] as List<dynamic>
+              : response['data']?['data'] ?? [];
+
+      isLoadingNotifications = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      isLoadingNotifications = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed: $e')),
+    );
+
+    return;
+  }
+
+  if (!mounted) return;
+
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+        title: Row(
+          children: [
+            const Expanded(
+              child: Text('Notifications'),
+            ),
+            if (notificationCount > 0)
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await NotificationService.markAllAsRead();
+                    if (!mounted) return;
+                    setState(() {
+                      notificationCount = 0;
+                      for (final item in notifications) {
+                        if (item is Map) {
+                          item['read_at'] = DateTime.now().toIso8601String();
+                        }
+                      }
+                    });
+                    setDialogState(() {});
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to mark all as read: $e')),
+                    );
+                  }
+                },
+                child: const Text('Read all'),
+              ),
+            Text(
+              '$notificationCount Unread',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: notifications.isEmpty
+              ? const Center(
+                  child: Text('No notifications found'),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: notifications.length,
+                  separatorBuilder: (_, __) =>
+                      const Divider(),
+                  itemBuilder: (context, index) {
+                    final item = notifications[index];
+
+                    final data =
+                        item['data'] ?? {};
+
+                    final isRead =
+                        item['read_at'] != null;
+
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      onTap: isRead
+                          ? null
+                          : () async {
+                              final id = item['id']?.toString();
+                              if (id == null || id.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Notification ID is missing'),
+                                  ),
+                                );
+                                return;
+                              }
+                              try {
+                                await NotificationService.markAsRead(
+                                  notificationId: id,
+                                );
+                                if (!mounted) return;
+                                setState(() {
+                                  item['read_at'] =
+                                      DateTime.now().toIso8601String();
+                                  if (notificationCount > 0) {
+                                    notificationCount--;
+                                  }
+                                });
+                                setDialogState(() {});
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to mark as read: $e'),
+                                  ),
+                                );
+                              }
+                            },
+                      leading: Icon(
+                        Icons.notifications_active,
+                        color: isRead
+                            ? Colors.grey
+                            : Colors.blue,
+                      ),
+                      title: Text(
+                        data['title'] ?? 'Notification',
+                        style: TextStyle(
+                          fontWeight: isRead
+                              ? FontWeight.normal
+                              : FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data['message'] ?? '',
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            item['created_at'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+      );
+    },
+  );
+}
+
   Widget _homeMenu(
   BuildContext context,
   String title,
@@ -163,10 +382,21 @@ Future<void> openGoogleMap() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Get Current Location"),
-      ),
+      
+appBar: AppBar(
+  backgroundColor:
+      Theme.of(context).colorScheme.inversePrimary,
+
+  title: const Text("Welcome"),
+
+  actions: [
+    NotificationWidget(
+      unreadCount: notificationCount,
+      onPressed: showNotifications,
+    ),
+  ],
+),
+      
       drawer: Drawer(
         child: ListView(
           children: [
