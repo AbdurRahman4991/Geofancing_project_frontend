@@ -29,7 +29,10 @@ class ApiService {
         }),
       );
 
-      final data = jsonDecode(response.body);
+      final decoded = _decodeResponse(response.body);
+      final data = decoded is Map<String, dynamic>
+          ? decoded
+          : <String, dynamic>{};
 
       // =====================================
       // LOGIN SUCCESSFUL
@@ -217,16 +220,48 @@ class ApiService {
       // =====================================
 
       if (response.statusCode >= 500) {
-        return 'Server error. Please try again later.';
+        return _responseMessage(
+          data,
+          'Server error (${response.statusCode}). Please try again later.',
+        );
       }
 
-      return data['message'] ?? 'Something went wrong.';
+      return _responseMessage(data, 'Something went wrong.');
 
     } catch (e) {
       print('Login Error: $e');
 
       return 'Unable to connect to server. Please check your internet connection.';
     }
+  }
+
+  static dynamic _decodeResponse(String body) {
+    try {
+      return jsonDecode(body);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _responseMessage(
+    Map<String, dynamic> data,
+    String fallback,
+  ) {
+    final message = data['message'];
+    if (message != null && message.toString().trim().isNotEmpty) {
+      return message.toString();
+    }
+
+    final errors = data['errors'];
+    if (errors is Map && errors.isNotEmpty) {
+      final firstError = errors.values.first;
+      if (firstError is List && firstError.isNotEmpty) {
+        return firstError.first.toString();
+      }
+      return firstError.toString();
+    }
+
+    return fallback;
   }
 
   // =====================================

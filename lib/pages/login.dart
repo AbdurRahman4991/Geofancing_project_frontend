@@ -98,6 +98,24 @@ class _LoginState extends State<Login> {
     });
 
     try {
+      // These values are loaded asynchronously in initState. Make sure a
+      // fast tap on Login cannot send empty device/location fields.
+      if (_deviceIdController.text.trim().isEmpty) {
+        _deviceIdController.text = await DeviceHelper.getDeviceId();
+      }
+      if (_latitudeController.text.trim().isEmpty ||
+          _longitudeController.text.trim().isEmpty) {
+        await _getCurrentLocation();
+      }
+
+      if (_deviceIdController.text.trim().isEmpty) {
+        throw Exception('Unable to get device ID. Please try again.');
+      }
+      if (_latitudeController.text.trim().isEmpty ||
+          _longitudeController.text.trim().isEmpty) {
+        throw Exception('Unable to get location. Enable location and try again.');
+      }
+
       final String email =
           _emailController.text.trim();
 

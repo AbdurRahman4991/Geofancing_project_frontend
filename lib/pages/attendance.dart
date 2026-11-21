@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '/helpers/location_helper.dart';
-import '../services/location_setting_service.dart';
 import '../services/AttendanceManager.dart';
 
 
@@ -85,27 +84,6 @@ class _AttendancePageState extends State<AttendancePage> {
             '/login'
         );
       }
-
-      return;
-    }
-
-
-
-    await GeofenceService.syncGeofences();
-
-
-    await attendanceManager.loadGeofence();
-
-
-
-    if (!attendanceManager.hasGeofence) {
-
-      setState(() {
-
-        statusMessage =
-            "No geofencing data found!";
-
-      });
 
       return;
     }
@@ -233,7 +211,11 @@ class _AttendancePageState extends State<AttendancePage> {
 
 
 
-    _checkProximity(position);
+    if (mounted) {
+      setState(() {
+        statusMessage = "Location ready. You can check in or check out.";
+      });
+    }
 
   }
 
@@ -285,57 +267,16 @@ class _AttendancePageState extends State<AttendancePage> {
 
 
 
-      _checkProximity(position);
+      if (mounted) {
+      setState(() {
+        statusMessage = "Location ready. You can check in or check out.";
+      });
+    }
 
 
     });
 
   }
-
-
-
-
-
-  void _checkProximity(Position position) {
-
-
-    final inside =
-        attendanceManager
-            .isInsideOffice(position);
-
-
-
-    setState(() {
-
-      isInsideOffice =
-          inside;
-
-
-      statusMessage =
-          inside
-              ? "You are inside office area"
-              : "You are outside office area";
-
-    });
-
-
-
-    if (inside && !isCheckedIn) {
-
-      _checkIn();
-
-    }
-
-
-    if (!inside && isCheckedIn) {
-
-      _checkOut();
-
-    }
-
-  }
-
-
 
 
 
@@ -345,7 +286,8 @@ class _AttendancePageState extends State<AttendancePage> {
 
 
     if (currentPosition == null) {
-      return;
+      await _getCurrentLocation();
+      if (currentPosition == null) return;
     }
 
 
@@ -402,7 +344,8 @@ class _AttendancePageState extends State<AttendancePage> {
 
 
     if (currentPosition == null) {
-      return;
+      await _getCurrentLocation();
+      if (currentPosition == null) return;
     }
 
 
