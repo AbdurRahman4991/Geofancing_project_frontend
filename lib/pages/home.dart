@@ -516,6 +516,13 @@ appBar: AppBar(
 
             _homeMenu(
               context,
+              "Tour Plans",
+              Icons.alt_route,
+              '/tour-plans',
+            ),
+
+            _homeMenu(
+              context,
               "New Farm",
               Icons.location_searching,
               '/location-setting',

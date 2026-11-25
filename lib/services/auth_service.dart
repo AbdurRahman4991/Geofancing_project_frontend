@@ -76,13 +76,8 @@ class AuthService {
 
     final user = jsonDecode(userString);
 
-    final employee = user['employee'];
-
-    if (employee == null) {
-      return null;
-    }
-
-    return int.tryParse(employee['company_id'].toString());
+    final companyId = user['company_id'] ?? user['employee']?['company_id'];
+    return companyId == null ? null : int.tryParse(companyId.toString());
   }
 
   // =====================================
